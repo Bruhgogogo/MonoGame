@@ -6,13 +6,10 @@ namespace MonoEngine.Class
     {
         public bool Destroyed = false;
 
-        public event Action<MonoObject> OnDestroySignal;
-
         public void Destroy()
         {
             if (Destroyed) return;
             Destroyed = true;
-            OnDestroySignal?.Invoke(this);
             OnDestroy();
         }
 

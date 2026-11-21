@@ -2,9 +2,10 @@
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using MonoEngine.MonoUtils;
+using MonoEngine.Class;
 using System;
 
-namespace MonoEngine.Class
+namespace MonoGame.Class
 {
     public class PlayerScript : Behaviour
     {
@@ -31,12 +32,15 @@ namespace MonoEngine.Class
         private RendererSprite rendererSprite;
         private Transform transform;
 
+        private Vector2 cameraVelocity = Vector2.Zero;
+
         public override void Awake()
         {
-            Texture2D playerTexture = MonoEngine.ResourceManager.Load<Texture2D>("ExperimentPlushieConstruction");
+            Texture2D playerTexture = MonoEngine.MonoEngine.ResourceManager.Load<Texture2D>("ExperimentPlushieConstruction");
 
             rendererSprite = GetOrAddComponent<RendererSprite>();
             rendererSprite.Texture = playerTexture;
+            rendererSprite.Origin = new Vector2(0.5f, 0.5f);
 
             transform = GetOrAddComponent<Transform>();
             transform.Position = Vector2.Zero;
@@ -101,9 +105,17 @@ namespace MonoEngine.Class
             transform.Position += Velocity * deltaTime;
         }
 
+        private void CameraFollow(float deltaTime)
+        {
+            if (Camera.Main == null)
+                return;
+
+            Camera.Main.Transform.Position = Vector2Ex.SmoothDamp(Camera.Main.Transform.Position, transform.Position, ref cameraVelocity, 0.1f, float.PositiveInfinity, deltaTime);
+        }
+
         private void CheckGroundCollision()
         {
-            float groundY = MonoEngine.WindowHeight - transform.Scale.Y;
+            float groundY = MonoEngine.MonoEngine.WindowHeight - transform.Scale.Y;
             if (transform.Position.Y >= groundY)
             {
                 transform.Position.Y = groundY;
@@ -128,6 +140,7 @@ namespace MonoEngine.Class
 
             ApplyGravity(deltaTime);
             ApplyVelocity(deltaTime);
+            CameraFollow(deltaTime);
             CheckGroundCollision();
         }
     }

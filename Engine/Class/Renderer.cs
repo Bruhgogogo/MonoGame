@@ -42,13 +42,14 @@ namespace MonoEngine.Class
         public override void Draw()
         {
             Vector2 pixelSize = new Vector2(transform.Scale.X / Texture.Width, transform.Scale.Y / Texture.Height);
+            Vector2 pixelOrigin = new Vector2(Origin.X * Texture.Width, Origin.Y * Texture.Height);
             spriteBatch.Draw(
                 Texture,
                 transform.Position,
                 null,
                 TextureColor,
                 transform.Rotation,
-                Origin,
+                pixelOrigin,
                 pixelSize,
                 GetSpriteEffect(),
                 SortingLayer
@@ -87,14 +88,16 @@ namespace MonoEngine.Class
 
         public override void Draw()
         {
+            float biggestScale = MathF.Max(transform.Scale.X, transform.Scale.Y);
+            Vector2 pixelOrigin = new Vector2(Origin.X * biggestScale, Origin.Y * biggestScale);
             spriteBatch.DrawString(
                 Font,
                 Text,
                 transform.Position,
                 TextColor,
                 transform.Rotation,
-                Origin,
-                MathF.Max(transform.Scale.X, transform.Scale.Y),
+                pixelOrigin,
+                biggestScale,
                 GetSpriteEffect(),
                 SortingLayer
             );

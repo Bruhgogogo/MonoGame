@@ -1,11 +1,14 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
+
 using MonoEngine.Class;
 using MonoEngine.MonoUtils;
+
+using MonoGame.Class;
+
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 
 namespace MonoEngine
 {
@@ -138,7 +141,8 @@ namespace MonoEngine
 
         private void BeginRenderPass()
         {
-            SpriteBatch.Begin();
+            Matrix? viewMatrix = (Camera.Main != null && Camera.Main.Enabled) ? Camera.Main.GetViewMatrix() : null;
+            SpriteBatch.Begin(SpriteSortMode.Deferred, null, null, null, null, null, viewMatrix);
         }
 
         private void EndRenderPass()
@@ -204,6 +208,10 @@ namespace MonoEngine
             GameObject playerObject = new GameObject();
             playerObject.Name = "Player";
             playerObject.AddComponent<PlayerScript>();
+
+            GameObject cameraObject = new GameObject();
+            cameraObject.Name = "Camera";
+            cameraObject.AddComponent<Camera>();
         }
     }
 }
