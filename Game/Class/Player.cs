@@ -4,6 +4,7 @@ using Microsoft.Xna.Framework.Input;
 using MonoEngine.MonoUtils;
 using MonoEngine.Class;
 using System;
+using MonoEngine;
 
 namespace MonoGame.Class
 {
@@ -48,9 +49,9 @@ namespace MonoGame.Class
             transform.Rotation = 0.0f;
         }
 
-        private bool IsOnTheRight(float x)
+        private bool IsMouseOnTheRight(float x)
         {
-            return x > transform.Position.X;
+            return x > MonoEngine.MonoEngine.WindowWidth * 0.5;
         }
 
         private void ProcessMove(KeyboardState keyboardState, float deltaTime)
@@ -87,7 +88,7 @@ namespace MonoGame.Class
 
         private void ProcessLook(MouseState mouseState)
         {
-            isFacingRight = IsOnTheRight(mouseState.X);
+            isFacingRight = IsMouseOnTheRight(mouseState.X);
             rendererSprite.FlipX = isFacingRight;
         }
 
