@@ -44,7 +44,7 @@ namespace MonoEngine.Class
         public T AddComponent<T>() where T : Component, new()
         {
             T component = new T();
-            component.GameObject = this;
+            component.Parent = this;
             components.Add(component);
             component.Awake();
             return component;

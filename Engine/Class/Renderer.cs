@@ -1,6 +1,7 @@
 ﻿using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework;
 using System;
+using System.Diagnostics;
 
 namespace MonoEngine.Class
 {
@@ -8,7 +9,7 @@ namespace MonoEngine.Class
     {
         protected SpriteBatch spriteBatch;
 
-        public override void Awake()
+        public Renderer()
         {
             spriteBatch = MonoEngine.SpriteBatch;
             MonoEngine.RendererList.Add(this);
@@ -23,34 +24,14 @@ namespace MonoEngine.Class
         public Texture2D Texture;
         public Vector2 Origin = Vector2.Zero;
         public Color TextureColor = Color.White;
-        public float Rotation = 0;
         public int SortingLayer = 0;
         public bool FlipX = false, FlipY = false, Visible = true;
 
-        private Vector2 position = Vector2.Zero;
-        private Vector2 size = Vector2.One;
-        private Rectangle rectangle = Rectangle.Empty;
+        private Transform transform;
 
-        public Vector2 Position
+        public override void Awake()
         {
-            get => position;
-            set
-            {
-                position = value;
-                rectangle.X = (int)MathF.Round(value.X);
-                rectangle.Y = (int)MathF.Round(value.Y);
-            }
-        }
-
-        public Vector2 Size
-        {
-            get => size;
-            set
-            {
-                size = value;
-                rectangle.Width = (int)MathF.Round(value.X);
-                rectangle.Height = (int)MathF.Round(value.Y);
-            }
+            transform = GetOrAddComponent<Transform>();
         }
 
         public override bool IsVisible()
@@ -60,10 +41,18 @@ namespace MonoEngine.Class
 
         public override void Draw()
         {
-            if (Texture == null || spriteBatch == null)
-                return;
-
-            spriteBatch.Draw(Texture, rectangle, null, TextureColor, Rotation, Origin, GetSpriteEffect(), SortingLayer);
+            Vector2 pixelSize = new Vector2(transform.Scale.X / Texture.Width, transform.Scale.Y / Texture.Height);
+            spriteBatch.Draw(
+                Texture,
+                transform.Position,
+                null,
+                TextureColor,
+                transform.Rotation,
+                Origin,
+                pixelSize,
+                GetSpriteEffect(),
+                SortingLayer
+            );
         }
 
         private SpriteEffects GetSpriteEffect()
@@ -78,12 +67,18 @@ namespace MonoEngine.Class
     public sealed class RendererText : Renderer
     {
         public SpriteFont Font;
-        public Vector2 Origin = Vector2.Zero, Position = Vector2.Zero;
+        public Vector2 Origin = Vector2.Zero;
         public Color TextColor = Color.White;
         public string Text = "";
-        public float Rotation = 0, Scale = 1.0f;
         public int SortingLayer = 0;
         public bool FlipX = false, FlipY = false, Visible = true;
+
+        private Transform transform;
+
+        public override void Awake()
+        {
+            transform = GetOrAddComponent<Transform>();
+        }
 
         public override bool IsVisible()
         {
@@ -92,10 +87,17 @@ namespace MonoEngine.Class
 
         public override void Draw()
         {
-            if (Font == null || spriteBatch == null || string.IsNullOrEmpty(Text))
-                return;
-
-            spriteBatch.DrawString(Font, Text, Position, TextColor, Rotation, Origin, Scale, GetSpriteEffect(), SortingLayer);
+            spriteBatch.DrawString(
+                Font,
+                Text,
+                transform.Position,
+                TextColor,
+                transform.Rotation,
+                Origin,
+                MathF.Max(transform.Scale.X, transform.Scale.Y),
+                GetSpriteEffect(),
+                SortingLayer
+            );
         }
 
         private SpriteEffects GetSpriteEffect()

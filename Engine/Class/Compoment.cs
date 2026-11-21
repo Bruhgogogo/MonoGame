@@ -5,7 +5,7 @@ namespace MonoEngine.Class
 {
     public class Component : MonoObject
     {
-        public GameObject GameObject;
+        public GameObject Parent;
 
         private bool enabled = true;
         public bool Enabled
@@ -26,17 +26,17 @@ namespace MonoEngine.Class
 
         public T GetOrAddComponent<T>() where T : Component, new()
         {
-            return GameObject?.GetOrAddComponent<T>();
+            return Parent?.GetOrAddComponent<T>();
         }
 
         public T GetComponent<T>() where T : Component
         {
-            return GameObject?.GetComponent<T>();
+            return Parent?.GetComponent<T>();
         }
 
         public List<T> GetComponents<T>() where T : Component
         {
-            return GameObject?.GetComponents<T>();
+            return Parent?.GetComponents<T>();
         }
     }
 }

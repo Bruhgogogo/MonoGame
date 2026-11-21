@@ -5,7 +5,7 @@ using MonoEngine.Class;
 using MonoEngine.MonoUtils;
 using System;
 using System.Collections.Generic;
-using System.Windows.Forms.Design.Behavior;
+using System.Diagnostics;
 
 namespace MonoEngine
 {
@@ -93,6 +93,7 @@ namespace MonoEngine
             IsMouseVisible = true;
 
             ResourceManager = Content;
+            MainGameInstance = this;
 
             Graphics.PreferredBackBufferHeight = DEFAULT_WINDOW_HEIGHT;
             Graphics.PreferredBackBufferWidth = DEFAULT_WINDOW_WIDTH;
@@ -152,7 +153,7 @@ namespace MonoEngine
 
         private void FixedUpdateWorld(GameTime gameTime)
         {
-            for (int i = BehaviourList.Count - 1; i >= 0; i--)
+            for (int i = 0; i < BehaviourList.Count; i++)
             {
                 Behaviour behaviour = BehaviourList[i];
 
@@ -164,7 +165,7 @@ namespace MonoEngine
 
         private void UpdateWorld(GameTime gameTime)
         {
-            for (int i = 0; i < BehaviourList.Count; i++)
+            for (int i = BehaviourList.Count - 1; i >= 0; i--)
             {
                 Behaviour behaviour = BehaviourList[i];
 
@@ -182,7 +183,7 @@ namespace MonoEngine
 
         private void RenderWorld()
         {
-            for (int i = 0; i < RendererList.Count; i++)
+            for (int i = RendererList.Count - 1; i >= 0; i--)
             {
                 Renderer renderer = RendererList[i];
 
