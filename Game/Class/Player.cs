@@ -1,17 +1,17 @@
-﻿using MonoEngine.MonoUtils;
-
-using Microsoft.Xna.Framework;
+﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
+using MonoEngine.MonoUtils;
+using System;
 
 namespace MonoEngine.Class
 {
     public class PlayerScript : Behaviour
     {
-        public float WalkSpeed = 400.0f;
-        public float RunSpeed = 800.0f;
+        public float WalkSpeed = 500.0f;
+        public float SprintSpeed = 900.0f;
 
-        public float MoveBackwardPenaltyFactor = 0.5f;
+        public float MoveBackwardPenaltyFactor = 0.7f;
 
         public float GroundAccel = 6.0f;
         public float AirAccel = 0.5f;
@@ -27,7 +27,6 @@ namespace MonoEngine.Class
 
         private bool isFacingRight = false;
         public bool IsFacingRight { get => isFacingRight; }
-
         private bool isGrounded = false;
         private RendererSprite rendererSprite;
 
@@ -59,13 +58,14 @@ namespace MonoEngine.Class
             }
 
             bool isMovingBackward = (isFacingRight && inputDirection < 0) || (!isFacingRight && inputDirection > 0);
+            bool Running = keyboardState.IsKeyDown(Keys.LeftShift) && !isMovingBackward;
 
-            float speed = (keyboardState.IsKeyDown(Keys.LeftShift) ? RunSpeed : WalkSpeed) * (isMovingBackward ? MoveBackwardPenaltyFactor : 1.0f);
+            float speed = (Running ? SprintSpeed : WalkSpeed) * (isMovingBackward ? MoveBackwardPenaltyFactor : 1.0f);
             float accel = isGrounded ? GroundAccel : AirAccel;
             float fric = isGrounded ? GroundFric : AirFric;
 
             CurrentVelocity.X += inputDirection * speed * accel * deltaTime;
-            CurrentVelocity.X *= 1.0f - fric * deltaTime;
+            CurrentVelocity.X *= MathF.Exp(-fric * deltaTime);
 
             if (keyboardState.IsKeyDown(Keys.Space))
             {
@@ -119,7 +119,7 @@ namespace MonoEngine.Class
 
         public override void Update(GameTime gameTime)
         {
-            float deltaTime = (float)gameTime.ElapsedGameTime.TotalSeconds;
+            float deltaTime = MathF.Min((float)gameTime.ElapsedGameTime.TotalSeconds, 0.1f);
 
             KeyboardState keyboardState = Keyboard.GetState();
             MouseState mouseState = Mouse.GetState();

@@ -1,10 +1,11 @@
-﻿using MonoEngine.Class;
-
-using Microsoft.Xna.Framework;
+﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
+using MonoEngine.Class;
+using MonoEngine.MonoUtils;
 using System;
 using System.Collections.Generic;
+using System.Windows.Forms.Design.Behavior;
 
 namespace MonoEngine
 {
@@ -17,14 +18,10 @@ namespace MonoEngine
         {
             get
             {
-                if (Graphics == null)
-                    throw new InvalidOperationException("Cannot access window width when GraphicsDeviceManager is not exist");
                 return Graphics.GraphicsDevice.Viewport.Width;
             }
             set
             {
-                if (Graphics == null)
-                    throw new InvalidOperationException("Cannot access window width when GraphicsDeviceManager is not exist");
                 Graphics.PreferredBackBufferWidth = value;
                 Graphics.ApplyChanges();
             }
@@ -33,14 +30,10 @@ namespace MonoEngine
         {
             get
             {
-                if (Graphics == null)
-                    throw new InvalidOperationException("Cannot access window height when GraphicsDeviceManager is not exist");
                 return Graphics.GraphicsDevice.Viewport.Height;
             }
             set
             {
-                if (Graphics == null)
-                    throw new InvalidOperationException("Cannot access window height when GraphicsDeviceManager is not exist");
                 Graphics.PreferredBackBufferHeight = value;
                 Graphics.ApplyChanges();
             }
@@ -50,14 +43,10 @@ namespace MonoEngine
         {
             get
             {
-                if (MainGameInstance == null)
-                    throw new InvalidOperationException("Cannot access window resizable when MainGameInstance is not exist");
                 return MainGameInstance.Window.AllowUserResizing;
             }
             set
             {
-                if (MainGameInstance == null)
-                    throw new InvalidOperationException("Cannot access window resizable when MainGameInstance is not exist");
                 MainGameInstance.Window.AllowUserResizing = value;
             }
         }
@@ -66,16 +55,24 @@ namespace MonoEngine
         {
             get
             {
-                if (Graphics == null)
-                    throw new InvalidOperationException("Cannot access is fullscreen when GraphicsDeviceManager is not exist");
                 return Graphics.IsFullScreen;
             }
             set
             {
-                if (Graphics == null)
-                    throw new InvalidOperationException("Cannot access is fullscreen when GraphicsDeviceManager is not exist");
                 Graphics.IsFullScreen = value;
                 Graphics.ApplyChanges();
+            }
+        }
+
+        static public int TargetElaspedTime
+        {
+            get
+            {
+                return MainGameInstance.TargetElapsedTime.Milliseconds;
+            }
+            set
+            {
+                MainGameInstance.TargetElapsedTime = TimeSpan.FromMilliseconds(value);
             }
         }
 
@@ -100,6 +97,9 @@ namespace MonoEngine
             Graphics.PreferredBackBufferHeight = DEFAULT_WINDOW_HEIGHT;
             Graphics.PreferredBackBufferWidth = DEFAULT_WINDOW_WIDTH;
             Graphics.SynchronizeWithVerticalRetrace = false;
+
+            IsFixedTimeStep = true;
+            TargetElapsedTime = TimeSpan.FromMilliseconds(1000 / 60);
 
             Window.AllowUserResizing = true;
             Window.Title = DEFAULT_WINDOW_TITLE;
@@ -126,19 +126,13 @@ namespace MonoEngine
         {
             ClearScreen(Color.CornflowerBlue);
 
-            CleanupDestroyed();
+            UpdateWorld(gameTime);
 
             BeginRenderPass();
-            UpdateWorld(gameTime);
+            RenderWorld();
             EndRenderPass();
 
             base.Draw(gameTime);
-        }
-
-        private void CleanupDestroyed()
-        {
-            BehaviourList.RemoveAll(b => !b);
-            RendererList.RemoveAll(r => !r);
         }
 
         private void BeginRenderPass()
@@ -158,8 +152,10 @@ namespace MonoEngine
 
         private void FixedUpdateWorld(GameTime gameTime)
         {
-            foreach (var behaviour in BehaviourList)
+            for (int i = BehaviourList.Count - 1; i >= 0; i--)
             {
+                Behaviour behaviour = BehaviourList[i];
+
                 if (!behaviour || !behaviour.Enabled) continue;
 
                 behaviour.FixedUpdate(gameTime);
@@ -168,16 +164,35 @@ namespace MonoEngine
 
         private void UpdateWorld(GameTime gameTime)
         {
-            foreach (var behaviour in BehaviourList)
+            for (int i = 0; i < BehaviourList.Count; i++)
             {
-                if (!behaviour || !behaviour.Enabled) continue;
+                Behaviour behaviour = BehaviourList[i];
 
-                behaviour.Update(gameTime);
+                if (!behaviour)
+                {
+                    BehaviourList.SwapAndRemove(i);
+                    continue;
+                }
+
+                if (!behaviour.Enabled) continue;
+
+                BehaviourList[i].Update(gameTime);
             }
+        }
 
-            foreach (var renderer in RendererList)
+        private void RenderWorld()
+        {
+            for (int i = 0; i < RendererList.Count; i++)
             {
-                if (!renderer || !renderer.IsVisible() || !renderer.Enabled) continue;
+                Renderer renderer = RendererList[i];
+
+                if (!renderer)
+                {
+                    RendererList.SwapAndRemove(i);
+                    continue;
+                }
+
+                if (!renderer.IsVisible() || !renderer.Enabled) continue;
 
                 renderer.Draw();
             }
