@@ -160,8 +160,9 @@ namespace MonoEngine
         {
             foreach (var behaviour in BehaviourList)
             {
-                if (behaviour)
-                    behaviour.FixedUpdate(gameTime);
+                if (!behaviour || !behaviour.Enabled) continue;
+
+                behaviour.FixedUpdate(gameTime);
             }
         }
 
@@ -169,21 +170,16 @@ namespace MonoEngine
         {
             foreach (var behaviour in BehaviourList)
             {
-                if (!behaviour) continue;
-
-                if (!behaviour.Started)
-                {
-                    behaviour.Started = true;
-                    behaviour.Start();
-                }
+                if (!behaviour || !behaviour.Enabled) continue;
 
                 behaviour.Update(gameTime);
             }
 
             foreach (var renderer in RendererList)
             {
-                if (renderer && renderer.IsVisible())
-                    renderer.Draw();
+                if (!renderer || !renderer.IsVisible() || !renderer.Enabled) continue;
+
+                renderer.Draw();
             }
         }
 
@@ -191,7 +187,7 @@ namespace MonoEngine
         {
             GameObject playerObject = new GameObject();
             playerObject.Name = "Player";
-            playerObject.AddComponent<Player>();
+            playerObject.AddComponent<PlayerScript>();
         }
     }
 }

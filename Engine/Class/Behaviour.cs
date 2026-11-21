@@ -4,8 +4,6 @@ namespace MonoEngine.Class
 {
     public class Behaviour : Component
     {
-        public bool Started;
-
         public Behaviour()
         {
             MonoEngine.BehaviourList.Add(this);
@@ -13,6 +11,5 @@ namespace MonoEngine.Class
 
         public virtual void Update(GameTime gameTime) { }
         public virtual void FixedUpdate(GameTime gameTime) { }
-        public virtual void Start() { }
     }
 }

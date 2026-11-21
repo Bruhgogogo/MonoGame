@@ -4,9 +4,42 @@ namespace MonoEngine.Class
 {
     public sealed class GameObject : MonoObject
     {
+        private static Dictionary<string, GameObject> nameToGameObject = new Dictionary<string, GameObject>();
+        private static int nextId = 0;
+
+        public readonly int InstanceId;
         private List<Component> components = new List<Component>();
-        public string Name = "GameObject";
-        public bool ActiveSelf = true;
+        private string name;
+
+        public string Name
+        {
+            get => name;
+            set
+            {
+                if (name == value) return;
+
+                if (!string.IsNullOrEmpty(name))
+                    nameToGameObject.Remove(name);
+
+                name = value;
+
+                if (!string.IsNullOrEmpty(name) && !nameToGameObject.ContainsKey(name))
+                    nameToGameObject[name] = this;
+            }
+        }
+
+        public GameObject()
+        {
+            InstanceId = nextId++;
+            name = $"GameObject{InstanceId}";
+            nameToGameObject[name] = this;
+        }
+
+        public static GameObject Find(string name)
+        {
+            nameToGameObject.TryGetValue(name, out var go);
+            return go;
+        }
 
         public T AddComponent<T>() where T : Component, new()
         {
@@ -44,6 +77,9 @@ namespace MonoEngine.Class
 
         public override void OnDestroy()
         {
+            if (!string.IsNullOrEmpty(name))
+                nameToGameObject.Remove(name);
+
             foreach (var comp in components)
             {
                 if (comp)

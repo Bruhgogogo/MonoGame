@@ -1,14 +1,17 @@
 ﻿using MonoEngine.MonoUtils;
+
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 
 namespace MonoEngine.Class
 {
-    public class Player : Behaviour
+    public class PlayerScript : Behaviour
     {
         public float WalkSpeed = 400.0f;
         public float RunSpeed = 800.0f;
+
+        public float MoveBackwardPenaltyFactor = 0.5f;
 
         public float GroundAccel = 6.0f;
         public float AirAccel = 0.5f;
@@ -37,6 +40,11 @@ namespace MonoEngine.Class
             rendererSprite.Size = new Vector2(100, 124);
         }
 
+        private bool IsOnTheRight(float x)
+        {
+            return x > CurrentPosition.X;
+        }
+
         private void ProcessMove(KeyboardState keyboardState, float deltaTime)
         {
             float inputDirection = 0.0f;
@@ -44,15 +52,15 @@ namespace MonoEngine.Class
             if (keyboardState.IsKeyDown(Keys.A))
             {
                 inputDirection -= 1.0f;
-                isFacingRight = false;
             }
             else if (keyboardState.IsKeyDown(Keys.D))
             {
                 inputDirection += 1.0f;
-                isFacingRight = true;
             }
 
-            float speed = keyboardState.IsKeyDown(Keys.LeftShift) ? RunSpeed : WalkSpeed;
+            bool isMovingBackward = (isFacingRight && inputDirection < 0) || (!isFacingRight && inputDirection > 0);
+
+            float speed = (keyboardState.IsKeyDown(Keys.LeftShift) ? RunSpeed : WalkSpeed) * (isMovingBackward ? MoveBackwardPenaltyFactor : 1.0f);
             float accel = isGrounded ? GroundAccel : AirAccel;
             float fric = isGrounded ? GroundFric : AirFric;
 
@@ -67,6 +75,11 @@ namespace MonoEngine.Class
                 CurrentVelocity.Y = -JumpForce;
                 isGrounded = false;
             }
+        }
+
+        private void ProcessLook(MouseState mouseState)
+        {
+            isFacingRight = IsOnTheRight(mouseState.X);
         }
 
         private void ApplyGravity(float deltaTime)
@@ -109,8 +122,10 @@ namespace MonoEngine.Class
             float deltaTime = (float)gameTime.ElapsedGameTime.TotalSeconds;
 
             KeyboardState keyboardState = Keyboard.GetState();
+            MouseState mouseState = Mouse.GetState();
 
             ProcessMove(keyboardState, deltaTime);
+            ProcessLook(mouseState);
             ApplyGravity(deltaTime);
             ApplyVelocity(deltaTime);
             CheckGroundCollision();
