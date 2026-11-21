@@ -79,7 +79,8 @@ namespace MonoEngine
             }
         }
 
-        static public List<MonoObject> ObjectList;
+        static public List<Renderer> RendererList;
+        static public List<Behaviour> BehaviourList;
 
         public static ContentManager ResourceManager;
         private static MonoEngine MainGameInstance;
@@ -108,7 +109,8 @@ namespace MonoEngine
         {
             SpriteBatch = new SpriteBatch(GraphicsDevice);
 
-            ObjectList = new List<MonoObject>();
+            RendererList = new List<Renderer>();
+            BehaviourList = new List<Behaviour>();
 
             LoadScene();
         }
@@ -124,11 +126,19 @@ namespace MonoEngine
         {
             ClearScreen(Color.CornflowerBlue);
 
+            CleanupDestroyed();
+
             BeginRenderPass();
             UpdateWorld(gameTime);
             EndRenderPass();
 
             base.Draw(gameTime);
+        }
+
+        private void CleanupDestroyed()
+        {
+            BehaviourList.RemoveAll(b => !b);
+            RendererList.RemoveAll(r => !r);
         }
 
         private void BeginRenderPass()
@@ -148,50 +158,40 @@ namespace MonoEngine
 
         private void FixedUpdateWorld(GameTime gameTime)
         {
-            for (int i = 0; i < ObjectList.Count; i++)
+            foreach (var behaviour in BehaviourList)
             {
-                if (ObjectList[i] is Behaviour behaviour && !behaviour.Destroyed)
-                {
+                if (behaviour)
                     behaviour.FixedUpdate(gameTime);
-                }
             }
         }
 
         private void UpdateWorld(GameTime gameTime)
         {
-            for (int i = ObjectList.Count - 1; i >= 0;)
+            foreach (var behaviour in BehaviourList)
             {
-                MonoObject obj = ObjectList[i];
+                if (!behaviour) continue;
 
-                if (obj.Destroyed)
+                if (!behaviour.Started)
                 {
-                    int lastIndex = ObjectList.Count - 1;
-                    ObjectList[i] = ObjectList[lastIndex];
-                    ObjectList.RemoveAt(lastIndex);
-                    continue;
+                    behaviour.Started = true;
+                    behaviour.Start();
                 }
 
-                if (obj is RendererSprite renderer && renderer.IsVisible())
-                {
+                behaviour.Update(gameTime);
+            }
+
+            foreach (var renderer in RendererList)
+            {
+                if (renderer && renderer.IsVisible())
                     renderer.Draw();
-                }
-                else if (obj is Behaviour behaviour)
-                {
-                    if (!behaviour.Started)
-                    {
-                        behaviour.Started = true;
-                        behaviour.Start();
-                    }
-                    behaviour.Update(gameTime);
-                }
-
-                i--;
             }
         }
 
         private void LoadScene()
         {
-            Player player = new Player();
+            GameObject playerObject = new GameObject();
+            playerObject.Name = "Player";
+            playerObject.AddComponent<Player>();
         }
     }
 }

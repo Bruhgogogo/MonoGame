@@ -10,14 +10,9 @@ namespace MonoEngine.Class
 
         public event Action<MonoObject> OnDestroySignal;
 
-        public MonoObject()
-        {
-            MonoEngine.ObjectList.Add(this);
-        }
-
         public void Destroy()
         {
-            if (Destroyed) throw new DoubleDestroyException();
+            if (Destroyed) return;
             Destroyed = true;
             OnDestroySignal?.Invoke(this);
             OnDestroy();

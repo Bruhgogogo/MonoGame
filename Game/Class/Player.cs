@@ -28,11 +28,11 @@ namespace MonoEngine.Class
         private bool isGrounded = false;
         private RendererSprite rendererSprite;
 
-        public Player() : base()
+        public override void Awake()
         {
             Texture2D playerTexture = MonoEngine.ResourceManager.Load<Texture2D>("ExperimentPlushieConstruction");
 
-            rendererSprite = new RendererSprite();
+            rendererSprite = GetOrAddComponent<RendererSprite>();
             rendererSprite.Texture = playerTexture;
             rendererSprite.Size = new Vector2(100, 124);
         }

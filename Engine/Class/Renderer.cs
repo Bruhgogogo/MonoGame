@@ -4,13 +4,14 @@ using System;
 
 namespace MonoEngine.Class
 {
-    public abstract class Renderer : MonoObject
+    public abstract class Renderer : Component
     {
         protected SpriteBatch spriteBatch;
 
-        public Renderer() : base()
+        public override void Awake()
         {
             spriteBatch = MonoEngine.SpriteBatch;
+            MonoEngine.RendererList.Add(this);
         }
 
         public abstract void Draw();
@@ -27,9 +28,12 @@ namespace MonoEngine.Class
         public bool FlipX = false, FlipY = false, Visible = true;
 
         private Vector2 position = Vector2.Zero;
+        private Vector2 size = Vector2.One;
+        private Rectangle rectangle = Rectangle.Empty;
+
         public Vector2 Position
         {
-            get { return position; }
+            get => position;
             set
             {
                 position = value;
@@ -38,10 +42,9 @@ namespace MonoEngine.Class
             }
         }
 
-        private Vector2 size = Vector2.One;
         public Vector2 Size
         {
-            get { return size; }
+            get => size;
             set
             {
                 size = value;
@@ -49,8 +52,6 @@ namespace MonoEngine.Class
                 rectangle.Height = (int)MathF.Round(value.Y);
             }
         }
-
-        private Rectangle rectangle = Rectangle.Empty;
 
         public override bool IsVisible()
         {
@@ -83,7 +84,7 @@ namespace MonoEngine.Class
         public float Rotation = 0, Scale = 1.0f;
         public int SortingLayer = 0;
         public bool FlipX = false, FlipY = false, Visible = true;
-        
+
         public override bool IsVisible()
         {
             return Visible && Font != null && spriteBatch != null && !string.IsNullOrEmpty(Text) && TextColor.A != 0;
