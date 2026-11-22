@@ -21,8 +21,8 @@ namespace MonoEngine.Class
         public float Volume = 1.0f;
         public float Pitch = 0.0f;
         public bool Loop = false;
-        public float MinDistance = 50.0f;
-        public float MaxDistance = 2000.0f;
+        public float MinDistance = 250.0f;
+        public float MaxDistance = 5000.0f;
         public float DopplerScale = 1.0f;
 
         public AudioVelocityUpdateMode Mode = AudioVelocityUpdateMode.Update;
@@ -72,11 +72,6 @@ namespace MonoEngine.Class
             instance.Pitch = Pitch;
             instance.IsLooped = Loop;
 
-            if (Is3DValid() && AudioInstanceExist())
-            {
-                UpdateSpatialData();
-            }
-
             instance.Play();
             isPlaying = true;
         }
@@ -120,7 +115,7 @@ namespace MonoEngine.Class
                 CalculateVelocity(gameTime);
             }
 
-            UpdateSpatialData();
+            UpdateDopplerAndAttenuation();
 
             if (!Loop && instance.State == MonoAudio.SoundState.Stopped)
             {
@@ -155,13 +150,13 @@ namespace MonoEngine.Class
 
             if (deltaTime > 0f)
             {
-                Velocity = (transform.Position - lastPosition) / deltaTime * MonoEngine.PIXEL_TO_METER;
+                Velocity = (transform.Position - lastPosition) / deltaTime;
             }
 
             lastPosition = transform.Position;
         }
 
-        private void UpdateSpatialData()
+        private void UpdateDopplerAndAttenuation()
         {
             AudioListener mainListener = AudioListener.Main;
             if (!mainListener || !mainListener.transform)
@@ -181,8 +176,9 @@ namespace MonoEngine.Class
             if (distance > 0.001f)
             {
                 Vector2 radialDir = relativePos / distance;
-                float sourceRadialVel = Vector2.Dot(Velocity, radialDir);
-                float listenerRadialVel = Vector2.Dot(mainListener.Velocity, radialDir);
+
+                float sourceRadialVel = Vector2.Dot(Velocity * MonoEngine.PIXEL_TO_METER, radialDir);
+                float listenerRadialVel = Vector2.Dot(mainListener.Velocity * MonoEngine.PIXEL_TO_METER, radialDir);
 
                 float factor = (SPEED_OF_SOUND + listenerRadialVel) / (SPEED_OF_SOUND + sourceRadialVel);
 

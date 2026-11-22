@@ -22,18 +22,6 @@ namespace MonoEngine.Class
         public Transform transform;
         private Vector2 lastPosition = Vector2.Zero;
 
-        private void UpdateVelocity(GameTime gameTime)
-        {
-            float deltaTime = (float)gameTime.ElapsedGameTime.TotalSeconds;
-
-            if (deltaTime > 0f)
-            {
-                Velocity = (transform.Position - lastPosition) / deltaTime * MonoEngine.PIXEL_TO_METER;
-            }
-
-            lastPosition = transform.Position;
-        }
-
         public override void Awake()
         {
             transform = GetOrAddComponent<Transform>();
@@ -59,6 +47,18 @@ namespace MonoEngine.Class
         {
             if (Mode == AudioVelocityUpdateMode.FixedUpdate)
                 UpdateVelocity(gameTime);
+        }
+
+        private void UpdateVelocity(GameTime gameTime)
+        {
+            float deltaTime = (float)gameTime.ElapsedGameTime.TotalSeconds;
+
+            if (deltaTime > 0f)
+            {
+                Velocity = (transform.Position - lastPosition) / deltaTime;
+            }
+
+            lastPosition = transform.Position;
         }
     }
 }
