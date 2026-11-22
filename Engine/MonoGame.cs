@@ -74,8 +74,8 @@ namespace MonoEngine
         public static ContentManager ResourceManager;
         private static MonoEngine MainGameInstance;
 
-        public const float METER_TO_PIXEL = 60.0f;
-        public const float PIXEL_TO_METER = 1.0f / 60.0f;
+        public const float METER_TO_PIXEL = 120.0f;
+        public const float PIXEL_TO_METER = 1.0f / 120.0f;
 
         private const int DEFAULT_WINDOW_WIDTH = 1280;
         private const int DEFAULT_WINDOW_HEIGHT = 720;
