@@ -6,11 +6,11 @@ namespace MonoEngine.Class
     {
         public static Camera Main;
 
-        public Transform Transform;
+        public Transform transform;
 
         public override void Awake()
         {
-            Transform = GetOrAddComponent<Transform>();
+            transform = GetOrAddComponent<Transform>();
 
             if (!Main)
                 Main = this;
@@ -25,9 +25,9 @@ namespace MonoEngine.Class
         public Matrix GetViewMatrix()
         {
             return
-                Matrix.CreateTranslation(-Transform.Position.X, -Transform.Position.Y, 0.0f)
-                * Matrix.CreateRotationZ(Transform.Rotation)
-                * Matrix.CreateScale(Transform.Scale.X, Transform.Scale.Y, 1.0f)
+                Matrix.CreateTranslation(-transform.Position.X, -transform.Position.Y, 0.0f)
+                * Matrix.CreateRotationZ(transform.Rotation)
+                * Matrix.CreateScale(transform.Scale.X, transform.Scale.Y, 1.0f)
                 * Matrix.CreateTranslation(new Vector3(MonoEngine.ViewportSize * 0.5f, 0.0f));
         }
 

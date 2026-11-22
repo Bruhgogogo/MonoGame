@@ -121,10 +121,11 @@ namespace MonoGame.Class
 
         private void CameraFollow(float deltaTime)
         {
-            if (!Camera.Main)
+            Camera camera = Camera.Main;
+            if (!camera)
                 return;
 
-            Camera.Main.Transform.Position = Vector2Ex.SmoothDamp(Camera.Main.Transform.Position, transform.Position, ref cameraVelocity, 0.1f, float.PositiveInfinity, deltaTime);
+            camera.transform.Position = Vector2Ex.SmoothDamp(camera.transform.Position, transform.Position, ref cameraVelocity, 0.1f, float.PositiveInfinity, deltaTime);
         }
 
         private void CheckGroundCollision()

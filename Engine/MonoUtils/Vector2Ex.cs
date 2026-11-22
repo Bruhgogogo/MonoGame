@@ -58,7 +58,7 @@ namespace MonoEngine.MonoUtils
         public static Vector2 ScreenToWorld(Vector2 screenPos, Camera camera)
         {
             Vector2 offset = screenPos - MonoEngine.ViewportSize * 0.5f;
-            return camera.Transform.Position + offset / camera.Transform.Scale;
+            return camera.transform.Position + offset / camera.transform.Scale;
         }
     }
 }
