@@ -4,7 +4,6 @@ using Microsoft.Xna.Framework.Input;
 using MonoEngine.MonoUtils;
 using MonoEngine.Class;
 using System;
-using MonoEngine;
 
 namespace MonoGame.Class
 {
@@ -51,7 +50,7 @@ namespace MonoGame.Class
 
         private bool IsMouseOnTheRight(float x)
         {
-            return x > MonoEngine.MonoEngine.WindowWidth * 0.5;
+            return x > transform.Position.X;
         }
 
         private void ProcessMove(KeyboardState keyboardState, float deltaTime)
@@ -116,7 +115,7 @@ namespace MonoGame.Class
 
         private void CheckGroundCollision()
         {
-            float groundY = MonoEngine.MonoEngine.WindowHeight - transform.Scale.Y;
+            float groundY = MonoEngine.MonoEngine.ViewportSize.Y - transform.Scale.Y * rendererSprite.Origin.Y;
             if (transform.Position.Y >= groundY)
             {
                 transform.Position.Y = groundY;

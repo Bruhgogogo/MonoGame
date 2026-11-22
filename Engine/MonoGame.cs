@@ -17,27 +17,16 @@ namespace MonoEngine
         static public GraphicsDeviceManager Graphics;
         static public SpriteBatch SpriteBatch;
 
-        static public int WindowWidth
+        static public Vector2 ViewportSize
         {
             get
             {
-                return Graphics.GraphicsDevice.Viewport.Width;
+                return new Vector2(Graphics.GraphicsDevice.Viewport.Width, Graphics.GraphicsDevice.Viewport.Height);
             }
             set
             {
-                Graphics.PreferredBackBufferWidth = value;
-                Graphics.ApplyChanges();
-            }
-        }
-        static public int WindowHeight
-        {
-            get
-            {
-                return Graphics.GraphicsDevice.Viewport.Height;
-            }
-            set
-            {
-                Graphics.PreferredBackBufferHeight = value;
+                Graphics.PreferredBackBufferWidth = (int)value.X;
+                Graphics.PreferredBackBufferHeight = (int)value.Y;
                 Graphics.ApplyChanges();
             }
         }
@@ -141,7 +130,7 @@ namespace MonoEngine
 
         private void BeginRenderPass()
         {
-            Matrix? viewMatrix = (Camera.Main != null && Camera.Main.Enabled) ? Camera.Main.GetViewMatrix() : null;
+            Matrix viewMatrix = (Camera.Main != null && Camera.Main.Enabled) ? Camera.Main.GetViewMatrix() : Matrix.Identity;
             SpriteBatch.Begin(SpriteSortMode.Deferred, null, null, null, null, null, viewMatrix);
         }
 
@@ -209,9 +198,9 @@ namespace MonoEngine
             playerObject.Name = "Player";
             playerObject.AddComponent<PlayerScript>();
 
-            GameObject cameraObject = new GameObject();
-            cameraObject.Name = "Camera";
-            cameraObject.AddComponent<Camera>();
+            //GameObject cameraObject = new GameObject();
+            //cameraObject.Name = "Camera";
+            //cameraObject.AddComponent<Camera>();
         }
     }
 }

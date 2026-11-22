@@ -1,4 +1,5 @@
 ﻿using Microsoft.Xna.Framework;
+using MonoEngine.Class;
 using System;
 
 namespace MonoEngine.MonoUtils
@@ -52,6 +53,12 @@ namespace MonoEngine.MonoUtils
             }
 
             return output;
+        }
+
+        public static Vector2 ScreenToWorld(Vector2 screenPos, Camera camera)
+        {
+            Vector2 offset = screenPos - MonoEngine.ViewportSize * 0.5f;
+            return camera.Transform.Position + offset / camera.Transform.Scale;
         }
     }
 }
