@@ -34,7 +34,7 @@ namespace MonoGame.Class
 
         private Vector2 cameraVelocity = Vector2.Zero;
 
-        public override void Awake()
+        public override void Start()
         {
             Texture2D playerTexture = MonoEngine.MonoEngine.ResourceManager.Load<Texture2D>("ExperimentPlushieConstruction");
 

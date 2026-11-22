@@ -170,7 +170,13 @@ namespace MonoEngine
 
                 if (!behaviour.Enabled) continue;
 
-                BehaviourList[i].Update(gameTime);
+                if (!behaviour.Started)
+                {
+                    behaviour.Started = true;
+                    behaviour.Start();
+                }
+
+                behaviour.Update(gameTime);
             }
         }
 
@@ -194,12 +200,10 @@ namespace MonoEngine
 
         private void LoadScene()
         {
-            GameObject playerObject = new GameObject();
-            playerObject.Name = "Player";
+            GameObject playerObject = new GameObject("Player");
             playerObject.AddComponent<PlayerScript>();
 
-            GameObject cameraObject = new GameObject();
-            cameraObject.Name = "Camera";
+            GameObject cameraObject = new GameObject("Camera");
             cameraObject.AddComponent<Camera>();
         }
     }

@@ -16,15 +16,23 @@ namespace MonoEngine.Class
             get => name;
             set
             {
-                if (name == value) return;
+                string newName = value ?? $"GameObject{InstanceId}";
+
+                if (name == newName) return;
 
                 if (!string.IsNullOrEmpty(name))
                     nameToGameObject.Remove(name);
 
-                name = value;
+                string finalName = newName;
+                int suffix = 1;
+                while (nameToGameObject.ContainsKey(finalName))
+                {
+                    finalName = $"{newName}_{suffix}";
+                    suffix++;
+                }
 
-                if (!string.IsNullOrEmpty(name) && !nameToGameObject.ContainsKey(name))
-                    nameToGameObject[name] = this;
+                name = finalName;
+                nameToGameObject[name] = this;
             }
         }
 
@@ -32,6 +40,29 @@ namespace MonoEngine.Class
         {
             InstanceId = nextId++;
             name = $"GameObject{InstanceId}";
+            nameToGameObject[name] = this;
+        }
+
+        public GameObject(string objectName)
+        {
+            InstanceId = nextId++;
+
+            if (string.IsNullOrWhiteSpace(objectName))
+            {
+                name = $"GameObject{InstanceId}";
+                nameToGameObject[name] = this;
+                return;
+            }
+
+            string finalName = objectName;
+            int suffix = 1;
+            while (nameToGameObject.ContainsKey(finalName))
+            {
+                finalName = $"{objectName}_{suffix}";
+                suffix++;
+            }
+
+            name = finalName;
             nameToGameObject[name] = this;
         }
 
