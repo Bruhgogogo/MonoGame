@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace MonoEngine.Class
+﻿namespace MonoEngine.Class
 {
     public class MonoObject
     {

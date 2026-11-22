@@ -1,6 +1,4 @@
 ﻿using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Graphics;
-using System;
 
 namespace MonoEngine.Class
 {
@@ -16,6 +14,12 @@ namespace MonoEngine.Class
 
             if (!Main)
                 Main = this;
+        }
+
+        public override void OnDestroy()
+        {
+            if (Main == this)
+                Main = null;
         }
 
         public Matrix GetViewMatrix()

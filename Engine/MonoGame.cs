@@ -205,6 +205,7 @@ namespace MonoEngine
 
             GameObject cameraObject = new GameObject("Camera");
             cameraObject.AddComponent<Camera>();
+            cameraObject.AddComponent<AudioListener>();
         }
     }
 }

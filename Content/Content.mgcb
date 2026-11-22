@@ -26,3 +26,10 @@
 /processorParam:Version=3.8.5.1
 /build:ExperimentPlushieConstruction.png
 
+#begin Ice.wav
+/importer:WavImporter
+/processor:SoundEffectProcessor
+/processorParam:Quality=Best
+/processorParam:Version=3.8.5.1
+/build:Ice.wav
+

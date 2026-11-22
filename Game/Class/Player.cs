@@ -4,6 +4,7 @@ using Microsoft.Xna.Framework.Input;
 using MonoEngine.MonoUtils;
 using MonoEngine.Class;
 using System;
+using Microsoft.Xna.Framework.Audio;
 
 namespace MonoGame.Class
 {
@@ -31,6 +32,7 @@ namespace MonoGame.Class
 
         private RendererSprite rendererSprite;
         private Transform transform;
+        private AudioSource audioSource;
 
         private Vector2 cameraVelocity = Vector2.Zero;
 
@@ -38,10 +40,12 @@ namespace MonoGame.Class
         {
             rendererSprite = GetOrAddComponent<RendererSprite>();
             transform = GetOrAddComponent<Transform>();
+            audioSource = GetOrAddComponent<AudioSource>();
         }
         public override void Start()
         {
             Texture2D playerTexture = MonoEngine.MonoEngine.ResourceManager.Load<Texture2D>("ExperimentPlushieConstruction");
+            SoundEffect bgm = MonoEngine.MonoEngine.ResourceManager.Load<SoundEffect>("Ice");
 
             rendererSprite.Texture = playerTexture;
             rendererSprite.Origin = new Vector2(0.5f, 0.5f);
@@ -49,6 +53,10 @@ namespace MonoGame.Class
             transform.Position = Vector2.Zero;
             transform.Scale = new Vector2(100.0f, 124f);
             transform.Rotation = 0.0f;
+
+            audioSource.Clip = bgm;
+            audioSource.Loop = true;
+            audioSource.Play();
         }
 
         private bool IsMouseOnTheRight(float x)
