@@ -34,15 +34,18 @@ namespace MonoGame.Class
 
         private Vector2 cameraVelocity = Vector2.Zero;
 
+        public override void Awake()
+        {
+            rendererSprite = GetOrAddComponent<RendererSprite>();
+            transform = GetOrAddComponent<Transform>();
+        }
         public override void Start()
         {
             Texture2D playerTexture = MonoEngine.MonoEngine.ResourceManager.Load<Texture2D>("ExperimentPlushieConstruction");
 
-            rendererSprite = GetOrAddComponent<RendererSprite>();
             rendererSprite.Texture = playerTexture;
             rendererSprite.Origin = new Vector2(0.5f, 0.5f);
 
-            transform = GetOrAddComponent<Transform>();
             transform.Position = Vector2.Zero;
             transform.Scale = new Vector2(100.0f, 124f);
             transform.Rotation = 0.0f;
