@@ -1,4 +1,5 @@
 ﻿using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
 using System;
 
 namespace MonoEngine.Class
@@ -24,6 +25,17 @@ namespace MonoEngine.Class
                 * Matrix.CreateRotationZ(Transform.Rotation)
                 * Matrix.CreateScale(Transform.Scale.X, Transform.Scale.Y, 1.0f)
                 * Matrix.CreateTranslation(new Vector3(MonoEngine.ViewportSize * 0.5f, 0.0f));
+        }
+
+        public Vector2 ScreenToWorld(Vector2 screenPos)
+        {
+            Matrix viewMatrix = GetViewMatrix();
+            Matrix inverseView = Matrix.Invert(viewMatrix);
+
+            Vector3 screenPos3 = new Vector3(screenPos, 0f);
+            Vector3 worldPos = Vector3.Transform(screenPos3, inverseView);
+
+            return new Vector2(worldPos.X, worldPos.Y);
         }
     }
 }

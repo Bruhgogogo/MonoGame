@@ -198,9 +198,9 @@ namespace MonoEngine
             playerObject.Name = "Player";
             playerObject.AddComponent<PlayerScript>();
 
-            //GameObject cameraObject = new GameObject();
-            //cameraObject.Name = "Camera";
-            //cameraObject.AddComponent<Camera>();
+            GameObject cameraObject = new GameObject();
+            cameraObject.Name = "Camera";
+            cameraObject.AddComponent<Camera>();
         }
     }
 }

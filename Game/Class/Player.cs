@@ -50,7 +50,10 @@ namespace MonoGame.Class
 
         private bool IsMouseOnTheRight(float x)
         {
-            return x > transform.Position.X;
+            if (!Camera.Main)
+                return x > transform.Position.X;
+            
+            return Camera.Main.ScreenToWorld(new Vector2(x, 0.0f)).X > transform.Position.X;
         }
 
         private void ProcessMove(KeyboardState keyboardState, float deltaTime)
@@ -107,7 +110,7 @@ namespace MonoGame.Class
 
         private void CameraFollow(float deltaTime)
         {
-            if (Camera.Main == null)
+            if (!Camera.Main)
                 return;
 
             Camera.Main.Transform.Position = Vector2Ex.SmoothDamp(Camera.Main.Transform.Position, transform.Position, ref cameraVelocity, 0.1f, float.PositiveInfinity, deltaTime);
