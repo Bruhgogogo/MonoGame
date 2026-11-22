@@ -74,6 +74,9 @@ namespace MonoEngine
         public static ContentManager ResourceManager;
         private static MonoEngine MainGameInstance;
 
+        public const float METER_TO_PIXEL = 60.0f;
+        public const float PIXEL_TO_METER = 1.0f / 60.0f;
+
         private const int DEFAULT_WINDOW_WIDTH = 1280;
         private const int DEFAULT_WINDOW_HEIGHT = 720;
         private const string DEFAULT_WINDOW_TITLE = "My Test";
@@ -204,7 +207,7 @@ namespace MonoEngine
             playerObject.AddComponent<PlayerScript>();
 
             GameObject cameraObject = new GameObject("Camera");
-            cameraObject.AddComponent<Camera>();
+            //cameraObject.AddComponent<Camera>();
             cameraObject.AddComponent<AudioListener>();
         }
     }

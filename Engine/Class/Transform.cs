@@ -13,7 +13,7 @@ namespace MonoEngine.Class
         {
             return new Vector2(
                 MathF.Cos(Rotation),
-                MathF.Sin(Rotation)
+                -MathF.Sin(Rotation)
             );
         }
 

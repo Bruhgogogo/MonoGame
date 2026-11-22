@@ -1,4 +1,5 @@
 ﻿using Microsoft.Xna.Framework;
+using System;
 using MonoAudio = Microsoft.Xna.Framework.Audio;
 
 namespace MonoEngine.Class
@@ -20,27 +21,43 @@ namespace MonoEngine.Class
         public float Volume = 1.0f;
         public float Pitch = 0.0f;
         public bool Loop = false;
-        public bool Is3D = false;
-        public float MinDistance = 10f;
-        public float MaxDistance = 500f;
+        public float MinDistance = 50.0f;
+        public float MaxDistance = 2000.0f;
         public float DopplerScale = 1.0f;
 
         public AudioVelocityUpdateMode Mode = AudioVelocityUpdateMode.Update;
 
         private MonoAudio.SoundEffectInstance instance;
-        private MonoAudio.AudioEmitter emitter;
-
         private Vector2 lastPosition = Vector2.Zero;
+
+        private const float SPEED_OF_SOUND = 343.0f;
 
         private bool isPlaying = false;
         public bool IsPlaying => isPlaying;
 
+        private bool is3D = false;
+        public bool Is3D
+        {
+            get
+            {
+                return is3D;
+            }
+            set
+            {
+                if (Started)
+                {
+                    return;
+                }
+                is3D = value;
+            }
+        }
+
         public override void Start()
         {
-            if (Is3D)
+            if (is3D)
             {
-                emitter = new MonoAudio.AudioEmitter();
                 transform = GetOrAddComponent<Transform>();
+                lastPosition = transform.Position;
             }
         }
 
@@ -55,7 +72,7 @@ namespace MonoEngine.Class
             instance.Pitch = Pitch;
             instance.IsLooped = Loop;
 
-            if (Is3D && emitter != null)
+            if (Is3DValid() && AudioInstanceExist())
             {
                 UpdateSpatialData();
             }
@@ -66,7 +83,7 @@ namespace MonoEngine.Class
 
         public void Stop()
         {
-            if (instance != null && !instance.IsDisposed)
+            if (AudioInstanceExist())
             {
                 instance.Stop();
                 instance.Dispose();
@@ -77,7 +94,7 @@ namespace MonoEngine.Class
 
         public void Pause()
         {
-            if (instance != null && !instance.IsDisposed && isPlaying)
+            if (AudioInstanceExist() && isPlaying)
             {
                 instance.Pause();
                 isPlaying = false;
@@ -86,7 +103,7 @@ namespace MonoEngine.Class
 
         public void Resume()
         {
-            if (instance != null && !instance.IsDisposed && !isPlaying)
+            if (AudioInstanceExist() && !isPlaying)
             {
                 instance.Resume();
                 isPlaying = true;
@@ -95,7 +112,7 @@ namespace MonoEngine.Class
 
         public override void Update(GameTime gameTime)
         {
-            if (!Is3D || instance == null || instance.IsDisposed || !isPlaying)
+            if (!Is3DValid() || !AudioInstanceExist() || !isPlaying)
                 return;
 
             if (Mode == AudioVelocityUpdateMode.Update)
@@ -113,7 +130,7 @@ namespace MonoEngine.Class
 
         public override void FixedUpdate(GameTime gameTime)
         {
-            if (!Is3D || instance == null || instance.IsDisposed || !isPlaying)
+            if (!Is3DValid() || !AudioInstanceExist() || !isPlaying)
                 return;
 
             if (Mode == AudioVelocityUpdateMode.FixedUpdate)
@@ -122,39 +139,61 @@ namespace MonoEngine.Class
             }
         }
 
+        private bool AudioInstanceExist()
+        {
+            return instance != null && !instance.IsDisposed;
+        }
+
+        private bool Is3DValid()
+        {
+            return is3D && transform;
+        }
+
         private void CalculateVelocity(GameTime gameTime)
         {
-            if (transform)
+            float deltaTime = (float)gameTime.ElapsedGameTime.TotalSeconds;
+
+            if (deltaTime > 0f)
             {
-                float deltaTime = (float)gameTime.ElapsedGameTime.TotalSeconds;
-
-                if (deltaTime > 0f)
-                {
-                    Velocity = (transform.Position - lastPosition) / deltaTime;
-                }
-
-                lastPosition = transform.Position;
+                Velocity = (transform.Position - lastPosition) / deltaTime * MonoEngine.PIXEL_TO_METER;
             }
+
+            lastPosition = transform.Position;
         }
 
         private void UpdateSpatialData()
         {
-            if (transform)
-            {
-                Vector2 forward = transform.GetForward();
-                Vector2 up = transform.GetUp();
-
-                emitter.Position = new Vector3(transform.Position.X, transform.Position.Y, 0f);
-                emitter.Forward = new Vector3(forward.X, forward.Y, 0f);
-                emitter.Up = new Vector3(up.X, up.Y, 0f);
-                emitter.Velocity = new Vector3(Velocity.X, Velocity.Y, 0f);
-                emitter.DopplerScale = DopplerScale;
-            }
-
             AudioListener mainListener = AudioListener.Main;
-            if (mainListener)
+            if (!mainListener || !mainListener.transform)
+                return;
+
+            Vector2 relativePos = transform.Position - mainListener.transform.Position;
+            float distance = relativePos.Length();
+
+            float volumeFactor = 1.0f;
+            if (distance > MinDistance)
             {
-                instance.Apply3D(mainListener.GetMonoListener(), emitter);
+                float t = (distance - MinDistance) / (MaxDistance - MinDistance);
+                volumeFactor = Math.Max(1.0f - t, 0f);
+            }
+            instance.Volume = Volume * volumeFactor;
+
+            if (distance > 0.001f)
+            {
+                Vector2 radialDir = relativePos / distance;
+                float sourceRadialVel = Vector2.Dot(Velocity, radialDir);
+                float listenerRadialVel = Vector2.Dot(mainListener.Velocity, radialDir);
+
+                float factor = (SPEED_OF_SOUND + listenerRadialVel) / (SPEED_OF_SOUND + sourceRadialVel);
+
+                float scaledFactor = 1.0f + (factor - 1.0f) * DopplerScale;
+
+                instance.Pitch = (1.0f + Pitch) * scaledFactor - 1.0f;
+                instance.Pitch = MathHelper.Clamp(instance.Pitch, -1.0f, 1.0f);
+            }
+            else
+            {
+                instance.Pitch = Pitch;
             }
         }
 

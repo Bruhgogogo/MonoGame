@@ -41,6 +41,7 @@ namespace MonoGame.Class
             rendererSprite = GetOrAddComponent<RendererSprite>();
             transform = GetOrAddComponent<Transform>();
             audioSource = GetOrAddComponent<AudioSource>();
+            audioSource.Is3D = true;
         }
         public override void Start()
         {

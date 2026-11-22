@@ -17,7 +17,6 @@ namespace MonoEngine.Class
 
         public AudioVelocityUpdateMode Mode = AudioVelocityUpdateMode.Update;
 
-        private MonoAudioListener monoListener = new MonoAudioListener();
         public Vector2 Velocity = Vector2.Zero;
 
         public Transform transform;
@@ -29,7 +28,7 @@ namespace MonoEngine.Class
 
             if (deltaTime > 0f)
             {
-                Velocity = (transform.Position - lastPosition) / deltaTime;
+                Velocity = (transform.Position - lastPosition) / deltaTime * MonoEngine.PIXEL_TO_METER;
             }
 
             lastPosition = transform.Position;
@@ -38,6 +37,7 @@ namespace MonoEngine.Class
         public override void Awake()
         {
             transform = GetOrAddComponent<Transform>();
+            lastPosition = transform.Position;
 
             if (!Main)
                 Main = this;
@@ -59,40 +59,6 @@ namespace MonoEngine.Class
         {
             if (Mode == AudioVelocityUpdateMode.FixedUpdate)
                 UpdateVelocity(gameTime);
-        }
-
-        public Vector3 GetPosition()
-        {
-            return new Vector3(transform.Position.X, transform.Position.Y, 0f);
-        }
-
-        public Vector3 GetForward()
-        {
-            Vector2 forward = transform.GetForward();
-            return new Vector3(forward.X, forward.Y, 0f);
-        }
-
-        public Vector3 GetUp()
-        {
-            Vector2 up = transform.GetUp();
-            return new Vector3(up.X, up.Y, 0f);
-        }
-
-        public Vector3 GetVelocity()
-        {
-            return new Vector3(Velocity.X, Velocity.Y, 0f);
-        }
-
-        public MonoAudioListener GetMonoListener()
-        {
-            Vector2 fwd = transform.GetForward();
-            Vector2 up = transform.GetUp();
-
-            monoListener.Position = new Vector3(transform.Position.X, transform.Position.Y, 0f);
-            monoListener.Forward = new Vector3(fwd.X, fwd.Y, 0f);
-            monoListener.Up = new Vector3(up.X, up.Y, 0f);
-            monoListener.Velocity = new Vector3(Velocity.X, Velocity.Y, 0f);
-            return monoListener;
         }
     }
 }
