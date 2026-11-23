@@ -1,11 +1,10 @@
-﻿using Microsoft.Xna.Framework;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 
 namespace MonoEngine.Class
 {
     public class Component : MonoObject
     {
-        public GameObject Parent;
+        public GameObject GO;
 
         private bool enabled = true;
         public bool Enabled
@@ -26,17 +25,17 @@ namespace MonoEngine.Class
 
         public T GetOrAddComponent<T>() where T : Component, new()
         {
-            return Parent?.GetOrAddComponent<T>();
+            return GO?.GetOrAddComponent<T>();
         }
 
         public T GetComponent<T>() where T : Component
         {
-            return Parent?.GetComponent<T>();
+            return GO?.GetComponent<T>();
         }
 
         public List<T> GetComponents<T>() where T : Component
         {
-            return Parent?.GetComponents<T>();
+            return GO?.GetComponents<T>();
         }
     }
 }

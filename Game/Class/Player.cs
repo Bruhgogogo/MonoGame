@@ -31,8 +31,11 @@ namespace MonoGame.Class
         private bool isGrounded = false;
 
         private RendererSprite rendererSprite;
+        private RendererSprite testRendererSprite;
         private Transform transform;
+        private Transform testTransform;
         private AudioSource audioSource;
+        private GameObject otherGameObject;
 
         private Vector2 cameraVelocity = Vector2.Zero;
 
@@ -42,6 +45,10 @@ namespace MonoGame.Class
             transform = GetOrAddComponent<Transform>();
             audioSource = GetOrAddComponent<AudioSource>();
             audioSource.Is3D = true;
+
+            otherGameObject = new GameObject("My Test Game Object");
+            testRendererSprite = otherGameObject.GetOrAddComponent<RendererSprite>();
+            testTransform = otherGameObject.GetOrAddComponent<Transform>();
         }
         public override void Start()
         {
@@ -51,13 +58,17 @@ namespace MonoGame.Class
             rendererSprite.Texture = playerTexture;
             rendererSprite.Origin = new Vector2(0.5f, 0.5f);
 
-            transform.Position = Vector2.Zero;
             transform.Scale = new Vector2(100.0f, 124f);
-            transform.Rotation = 0.0f;
 
             audioSource.Clip = bgm;
             audioSource.Loop = true;
             audioSource.Play();
+
+            testRendererSprite.Texture = playerTexture;
+            testRendererSprite.Origin = new Vector2(0.5f, 0.5f);
+
+            testTransform.Scale = new Vector2(1.5f, 1.5f);
+            testTransform.Parent = transform;
         }
 
         private bool IsMouseOnTheRight(float x)
@@ -134,7 +145,7 @@ namespace MonoGame.Class
             float groundY = MonoEngine.MonoEngine.ViewportSize.Y - transform.Scale.Y * rendererSprite.Origin.Y;
             if (transform.Position.Y >= groundY)
             {
-                transform.Position.Y = groundY;
+                transform.Position = new Vector2(transform.Position.X, groundY);
                 Velocity.Y = 0f;
                 isGrounded = true;
             }

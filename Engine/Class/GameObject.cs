@@ -75,7 +75,7 @@ namespace MonoEngine.Class
         public T AddComponent<T>() where T : Component, new()
         {
             T component = new T();
-            component.Parent = this;
+            component.GO = this;
             components.Add(component);
             component.Awake();
             return component;

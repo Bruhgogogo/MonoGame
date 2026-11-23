@@ -12,7 +12,7 @@ namespace MonoEngine.Class
             Update,
             Manuel
         }
-
+        
         public MonoAudio.SoundEffect Clip;
         public Transform transform;
 
@@ -71,7 +71,7 @@ namespace MonoEngine.Class
             instance.Volume = Volume;
             instance.Pitch = Pitch;
             instance.IsLooped = Loop;
-
+            
             instance.Play();
             isPlaying = true;
         }
@@ -176,9 +176,11 @@ namespace MonoEngine.Class
             if (distance > 0.001f)
             {
                 Vector2 radialDir = relativePos / distance;
+                Vector2 normalizedAudioVelocity = Velocity * MonoEngine.PIXEL_TO_METER;
+                Vector2 normalizedListenerVelocity = mainListener.Velocity * MonoEngine.PIXEL_TO_METER;
 
-                float sourceRadialVel = Vector2.Dot(Velocity * MonoEngine.PIXEL_TO_METER, radialDir);
-                float listenerRadialVel = Vector2.Dot(mainListener.Velocity * MonoEngine.PIXEL_TO_METER, radialDir);
+                float sourceRadialVel = Vector2.Dot(normalizedAudioVelocity, radialDir);
+                float listenerRadialVel = Vector2.Dot(normalizedListenerVelocity, radialDir);
 
                 float factor = (SPEED_OF_SOUND + listenerRadialVel) / (SPEED_OF_SOUND + sourceRadialVel);
 
