@@ -1,10 +1,14 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
+using Microsoft.Xna.Framework.Audio;
+
 using MonoEngine.MonoUtils;
 using MonoEngine.Class;
+
+using Engine = MonoEngine.MonoEngine;
+
 using System;
-using Microsoft.Xna.Framework.Audio;
 
 namespace MonoGame.Class
 {
@@ -33,6 +37,7 @@ namespace MonoGame.Class
         private RendererSprite rendererSprite;
         private Transform transform;
         private AudioSource audioSource;
+        private BoxCollider boxCollider; 
 
         private Vector2 cameraVelocity = Vector2.Zero;
 
@@ -41,12 +46,14 @@ namespace MonoGame.Class
             rendererSprite = GetOrAddComponent<RendererSprite>();
             transform = GetOrAddComponent<Transform>();
             audioSource = GetOrAddComponent<AudioSource>();
+            boxCollider = GetOrAddComponent<BoxCollider>();
+
             audioSource.Is3D = true;
         }
         public override void Start()
         {
-            Texture2D playerTexture = MonoEngine.MonoEngine.ResourceManager.Load<Texture2D>("ExperimentPlushieConstruction");
-            SoundEffect bgm = MonoEngine.MonoEngine.ResourceManager.Load<SoundEffect>("Ice");
+            Texture2D playerTexture = Engine.ResourceManager.Load<Texture2D>("ExperimentPlushieConstruction");
+            SoundEffect bgm = Engine.ResourceManager.Load<SoundEffect>("Ice");
 
             rendererSprite.Texture = playerTexture;
             rendererSprite.Origin = new Vector2(0.5f, 0.5f);
@@ -93,7 +100,7 @@ namespace MonoGame.Class
                 if (!isGrounded)
                     return;
 
-                Velocity.Y = -JumpForce;
+                Velocity.Y = JumpForce;
                 isGrounded = false;
             }
         }
@@ -108,7 +115,7 @@ namespace MonoGame.Class
         {
             if (!isGrounded)
             {
-                Velocity.Y += Gravity * deltaTime;
+                Velocity.Y -= Gravity * deltaTime;
             }
         }
 
@@ -129,11 +136,32 @@ namespace MonoGame.Class
 
         private void CheckGroundCollision()
         {
-            float groundY = MonoEngine.MonoEngine.ViewportSize.Y - transform.Scale.Y * rendererSprite.Origin.Y;
-            if (transform.Position.Y >= groundY)
+            GameObject ground = GameObject.Find("Ground");
+            BoxCollider groundCollider = ground.GetComponent<BoxCollider>();
+
+            AABB playerAABB = boxCollider.GetAABB();
+            AABB groundAABB = groundCollider.GetAABB();
+
+            if (!playerAABB.Overlaps(groundAABB))
             {
-                transform.Position = new Vector2(transform.Position.X, groundY);
-                Velocity.Y = 0f;
+                isGrounded = false;
+                return;
+            }
+
+            Vector2 playerBottomCenter = new Vector2(
+                transform.Position.X,
+                transform.Position.Y - transform.Scale.Y * 0.5f
+            );
+
+            if (groundCollider.Contains(playerBottomCenter) && Velocity.Y <= 0)
+            {
+                Vector2 groundSurface = groundCollider.ClosestPoint(playerBottomCenter);
+
+                transform.Position = new Vector2(
+                    transform.Position.X,
+                    groundSurface.Y + transform.Scale.Y * 0.5f
+                );
+                Velocity.Y = 0;
                 isGrounded = true;
             }
             else

@@ -29,7 +29,7 @@ namespace MonoEngine.Class
             Vector2 pixelOrigin = new Vector2(Origin.X * Texture.Width, Origin.Y * Texture.Height);
             spriteBatch.Draw(
                 Texture,
-                transform.Position,
+                new Vector2(transform.Position.X, -transform.Position.Y),
                 null,
                 TextureColor,
                 transform.Rotation,

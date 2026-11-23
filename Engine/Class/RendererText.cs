@@ -32,7 +32,7 @@ namespace MonoEngine.Class
             spriteBatch.DrawString(
                 Font,
                 Text,
-                transform.Position,
+                new Vector2(transform.Position.X, -transform.Position.Y),
                 TextColor,
                 transform.Rotation,
                 pixelOrigin,

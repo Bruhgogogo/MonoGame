@@ -10,6 +10,8 @@ using MonoGame.Class;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Text.RegularExpressions;
+using System.Transactions;
 using System.Windows.Forms.Design.Behavior;
 
 namespace MonoEngine
@@ -229,11 +231,18 @@ namespace MonoEngine
         private void LoadScene()
         {
             GameObject playerObject = new GameObject("Player");
-            playerObject.AddComponent<PlayerScript>();
+            playerObject.GetOrAddComponent<PlayerScript>();
 
             GameObject cameraObject = new GameObject("Camera");
-            //cameraObject.AddComponent<Camera>();
-            cameraObject.AddComponent<AudioListener>();
+            //cameraObject.GetOrAddComponent<Camera>();
+            cameraObject.GetOrAddComponent<AudioListener>();
+
+            GameObject ground = new GameObject("Ground");
+            ground.GetOrAddComponent<BoxCollider>();
+
+            Transform transform = ground.GetOrAddComponent<Transform>();
+            transform.Position = new Vector2(640.0f, -720.0f);
+            transform.Scale = new Vector2(1280.0f, 10.0f);
         }
     }
 }
