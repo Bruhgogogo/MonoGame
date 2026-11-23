@@ -31,11 +31,8 @@ namespace MonoGame.Class
         private bool isGrounded = false;
 
         private RendererSprite rendererSprite;
-        private RendererSprite testRendererSprite;
         private Transform transform;
-        private Transform testTransform;
         private AudioSource audioSource;
-        private GameObject otherGameObject;
 
         private Vector2 cameraVelocity = Vector2.Zero;
 
@@ -45,10 +42,6 @@ namespace MonoGame.Class
             transform = GetOrAddComponent<Transform>();
             audioSource = GetOrAddComponent<AudioSource>();
             audioSource.Is3D = true;
-
-            otherGameObject = new GameObject("My Test Game Object");
-            testRendererSprite = otherGameObject.GetOrAddComponent<RendererSprite>();
-            testTransform = otherGameObject.GetOrAddComponent<Transform>();
         }
         public override void Start()
         {
@@ -63,12 +56,6 @@ namespace MonoGame.Class
             audioSource.Clip = bgm;
             audioSource.Loop = true;
             audioSource.Play();
-
-            testRendererSprite.Texture = playerTexture;
-            testRendererSprite.Origin = new Vector2(0.5f, 0.5f);
-
-            testTransform.Scale = new Vector2(1.5f, 1.5f);
-            testTransform.Parent = transform;
         }
 
         private bool IsMouseOnTheRight(float x)

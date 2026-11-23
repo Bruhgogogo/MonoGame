@@ -11,6 +11,9 @@ namespace MonoEngine.Class
         private Vector2 localScale = Vector2.One;
         private float localRotation = 0.0f;
 
+        private Vector2 cachedWorldPosition = Vector2.Zero;
+        private Matrix cachedWorldMatrix = Matrix.Identity;
+
         private Transform parent;
         private readonly List<Transform> children = new List<Transform>();
 
@@ -20,10 +23,11 @@ namespace MonoEngine.Class
             set
             {
                 if (parent == value) return;
-                parent?.children.SwapAndRemove(parent.children.IndexOf(this));
+                parent?.children.Remove(this);
                 parent = value;
                 value?.children.Add(this);
-                RecalculateWorldFromParent();
+                RecalculateCaches();
+                PropagateToChildren();
             }
         }
 
@@ -33,7 +37,8 @@ namespace MonoEngine.Class
             set
             {
                 localPosition = value;
-                RecalculateWorldFromParent();
+                RecalculateCaches();
+                PropagateToChildren();
             }
         }
 
@@ -43,7 +48,8 @@ namespace MonoEngine.Class
             set
             {
                 localScale = value;
-                RecalculateWorldFromParent();
+                RecalculateCaches();
+                PropagateToChildren();
             }
         }
 
@@ -53,17 +59,14 @@ namespace MonoEngine.Class
             set
             {
                 localRotation = value;
-                RecalculateWorldFromParent();
+                RecalculateCaches();
+                PropagateToChildren();
             }
         }
 
         public Vector2 Position
         {
-            get
-            {
-                if (parent == null) return localPosition;
-                return parent.ToWorldSpace(localPosition);
-            }
+            get => cachedWorldPosition;
             set
             {
                 if (parent == null)
@@ -74,6 +77,7 @@ namespace MonoEngine.Class
                 {
                     localPosition = parent.ToObjectSpace(value);
                 }
+                RecalculateCaches();
                 PropagateToChildren();
             }
         }
@@ -101,6 +105,7 @@ namespace MonoEngine.Class
                         parent.Scale.Y != 0f ? value.Y / parent.Scale.Y : value.Y
                     );
                 }
+                RecalculateCaches();
                 PropagateToChildren();
             }
         }
@@ -122,6 +127,7 @@ namespace MonoEngine.Class
                 {
                     localRotation = value - parent.Rotation;
                 }
+                RecalculateCaches();
                 PropagateToChildren();
             }
         }
@@ -154,59 +160,39 @@ namespace MonoEngine.Class
             }
         }
 
-        private void RecalculateWorldFromParent()
+        private void RecalculateCaches()
         {
-            PropagateToChildren();
+            Matrix localMatrix = GetLocalMatrix();
+            if (parent != null)
+            {
+                cachedWorldMatrix = localMatrix * parent.cachedWorldMatrix;
+                cachedWorldPosition = Vector2.Transform(Vector2.Zero, cachedWorldMatrix);
+            }
+            else
+            {
+                cachedWorldMatrix = localMatrix;
+                cachedWorldPosition = new Vector2(cachedWorldMatrix.M41, cachedWorldMatrix.M42);
+            }
         }
 
         private void PropagateToChildren()
         {
             for (int i = 0; i < children.Count; i++)
             {
-                children[i].OnParentChanged();
-            }
-        }
-
-        private void OnParentChanged()
-        {
-            for (int i = 0; i < children.Count; i++)
-            {
-                children[i].OnParentChanged();
+                children[i].RecalculateCaches();
+                children[i].PropagateToChildren();
             }
         }
 
         public Vector2 ToWorldSpace(Vector2 localPoint)
         {
-            float cos = MathF.Cos(localRotation);
-            float sin = MathF.Sin(localRotation);
-            Vector2 scaled = localPoint * localScale;
-            Vector2 worldPos = new Vector2(
-                scaled.X * cos - scaled.Y * sin,
-                scaled.X * sin + scaled.Y * cos
-            ) + localPosition;
-
-            if (parent != null)
-                worldPos = parent.ToWorldSpace(worldPos);
-
-            return worldPos;
+            return Vector2.Transform(localPoint, cachedWorldMatrix);
         }
 
         public Vector2 ToObjectSpace(Vector2 worldPoint)
         {
-            if (parent != null)
-                worldPoint = parent.ToObjectSpace(worldPoint);
-
-            Vector2 translated = worldPoint - localPosition;
-            float cos = MathF.Cos(-localRotation);
-            float sin = MathF.Sin(-localRotation);
-            Vector2 rotated = new Vector2(
-                translated.X * cos - translated.Y * sin,
-                translated.X * sin + translated.Y * cos
-            );
-            return new Vector2(
-                localScale.X != 0f ? rotated.X / localScale.X : rotated.X,
-                localScale.Y != 0f ? rotated.Y / localScale.Y : rotated.Y
-            );
+            Matrix inverseMatrix = Matrix.Invert(cachedWorldMatrix);
+            return Vector2.Transform(worldPoint, inverseMatrix);
         }
 
         public Transform ToTransformSpace(Transform other)
@@ -276,6 +262,11 @@ namespace MonoEngine.Class
         }
 
         public Matrix GetMatrix()
+        {
+            return cachedWorldMatrix;
+        }
+
+        private Matrix GetLocalMatrix()
         {
             return
                 Matrix.CreateScale(new Vector3(localScale.X, localScale.Y, 1f)) *
