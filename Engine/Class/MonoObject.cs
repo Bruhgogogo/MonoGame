@@ -20,5 +20,11 @@
         {
             return obj != null && !obj.Destroyed;
         }
+
+        public static void DestroyObject(MonoObject obj, float lifeTime)
+        {
+            GCObject gcObject = new GCObject(obj, lifeTime);
+            MonoEngine.PendingGCList.Add(gcObject);
+        }
     }
 }

@@ -70,6 +70,7 @@ namespace MonoEngine
 
         static public List<Renderer> RendererList;
         static public List<Behaviour> BehaviourList;
+        static public List<GCObject> PendingGCList;
 
         public static ContentManager ResourceManager;
         private static MonoEngine MainGameInstance;
@@ -122,6 +123,7 @@ namespace MonoEngine
         {
             ClearScreen(Color.CornflowerBlue);
 
+            UpdateGCObject();
             UpdateWorld(gameTime);
 
             BeginRenderPass();
@@ -145,6 +147,26 @@ namespace MonoEngine
         private void ClearScreen(Color clearColor)
         {
             GraphicsDevice.Clear(clearColor);
+        }
+
+        private void UpdateGCObject()
+        {
+            for (int i = PendingGCList.Count - 1; i >= 0; i--)
+            {
+                GCObject gcObj = PendingGCList[i];
+
+                if (gcObj.IsObjectDestroyed())
+                {
+                    PendingGCList.SwapAndRemove(i);
+                    continue;
+                }
+
+                if (gcObj.ShouldDestroy())
+                {
+                    gcObj.Destroy();
+                    PendingGCList.SwapAndRemove(i);
+                }
+            }
         }
 
         private void FixedUpdateWorld(GameTime gameTime)
