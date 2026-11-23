@@ -1,10 +1,38 @@
 ﻿using Microsoft.Xna.Framework;
-using System;
 using MonoAudio = Microsoft.Xna.Framework.Audio;
+
+namespace MonoEngine.Audio
+{
+    public class AudioCalculation
+    {
+        public virtual float CalculateDistanceAttenuation(float distance, float minDistance, float maxDistance)
+        {
+            if (distance <= minDistance) return 1.0f;
+            if (distance >= maxDistance) return 0.0f;
+            float t = (distance - minDistance) / (maxDistance - minDistance);
+            return MathHelper.Max(1.0f - t, 0.0f);
+        }
+
+        public virtual float CalculateDopplerPitch(float sourceVelocityAlongRadial, float listenerVelocityAlongRadial, float originalPitch, float dopplerScale, float speedOfSound = 343.0f)
+        {
+            float factor = (speedOfSound + listenerVelocityAlongRadial)
+                         / (speedOfSound + sourceVelocityAlongRadial);
+            float scaledFactor = 1.0f + (factor - 1.0f) * dopplerScale;
+            float result = (1.0f + originalPitch) * scaledFactor - 1.0f;
+            return MathHelper.Clamp(result, -1.0f, 1.0f);
+        }
+
+        public virtual float CalculateVolumeFactor(float distance, float minDistance, float maxDistance, float volume, float dopplerPitch)
+        {
+            float attenuation = CalculateDistanceAttenuation(distance, minDistance, maxDistance);
+            return volume * attenuation;
+        }
+    }
+}
 
 namespace MonoEngine.Class
 {
-    public class AudioSource : Behaviour
+    public sealed class AudioSource : Behaviour
     {
         public enum AudioVelocityUpdateMode
         {
@@ -12,7 +40,7 @@ namespace MonoEngine.Class
             Update,
             Manuel
         }
-        
+
         public MonoAudio.SoundEffect Clip;
         public Transform transform;
 
@@ -26,6 +54,8 @@ namespace MonoEngine.Class
         public float DopplerScale = 1.0f;
 
         public AudioVelocityUpdateMode Mode = AudioVelocityUpdateMode.Update;
+
+        public Audio.AudioCalculation AudioCalculation = new Audio.AudioCalculation();
 
         private MonoAudio.SoundEffectInstance instance;
         private Vector2 lastPosition = Vector2.Zero;
@@ -71,7 +101,7 @@ namespace MonoEngine.Class
             instance.Volume = Volume;
             instance.Pitch = Pitch;
             instance.IsLooped = Loop;
-            
+
             instance.Play();
             isPlaying = true;
         }
@@ -165,14 +195,7 @@ namespace MonoEngine.Class
             Vector2 relativePos = transform.Position - mainListener.transform.Position;
             float distance = relativePos.Length();
 
-            float volumeFactor = 1.0f;
-            if (distance > MinDistance)
-            {
-                float t = (distance - MinDistance) / (MaxDistance - MinDistance);
-                volumeFactor = Math.Max(1.0f - t, 0f);
-            }
-            instance.Volume = Volume * volumeFactor;
-
+            float dopplerPitch = 0.0f;
             if (distance > 0.001f)
             {
                 Vector2 radialDir = relativePos / distance;
@@ -182,17 +205,16 @@ namespace MonoEngine.Class
                 float sourceRadialVel = Vector2.Dot(normalizedAudioVelocity, radialDir);
                 float listenerRadialVel = Vector2.Dot(normalizedListenerVelocity, radialDir);
 
-                float factor = (SPEED_OF_SOUND + listenerRadialVel) / (SPEED_OF_SOUND + sourceRadialVel);
-
-                float scaledFactor = 1.0f + (factor - 1.0f) * DopplerScale;
-
-                instance.Pitch = (1.0f + Pitch) * scaledFactor - 1.0f;
-                instance.Pitch = MathHelper.Clamp(instance.Pitch, -1.0f, 1.0f);
+                dopplerPitch = AudioCalculation.CalculateDopplerPitch(sourceRadialVel, listenerRadialVel, Pitch, DopplerScale);
             }
             else
             {
-                instance.Pitch = Pitch;
+                dopplerPitch = Pitch;
             }
+
+            instance.Volume = AudioCalculation.CalculateVolumeFactor(distance, MinDistance, MaxDistance, Volume, dopplerPitch);
+
+            instance.Pitch = dopplerPitch;
         }
 
         protected override void OnDestroy()

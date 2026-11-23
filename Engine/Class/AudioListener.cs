@@ -1,10 +1,8 @@
 ﻿using Microsoft.Xna.Framework;
 
-using MonoAudioListener = Microsoft.Xna.Framework.Audio.AudioListener;
-
 namespace MonoEngine.Class
 {
-    public class AudioListener : Behaviour
+    public sealed class AudioListener : Behaviour
     {
         public enum AudioVelocityUpdateMode
         {
