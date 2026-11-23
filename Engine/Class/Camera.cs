@@ -16,7 +16,7 @@ namespace MonoEngine.Class
                 Main = this;
         }
 
-        public override void OnDestroy()
+        protected override void OnDestroy()
         {
             if (Main == this)
                 Main = null;

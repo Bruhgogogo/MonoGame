@@ -11,7 +11,7 @@
             OnDestroy();
         }
 
-        public virtual void OnDestroy()
+        protected virtual void OnDestroy()
         {
 
         }

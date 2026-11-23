@@ -9,6 +9,8 @@ using MonoGame.Class;
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.Windows.Forms.Design.Behavior;
 
 namespace MonoEngine
 {
@@ -108,6 +110,7 @@ namespace MonoEngine
 
             RendererList = new List<Renderer>();
             BehaviourList = new List<Behaviour>();
+            PendingGCList = new List<GCObject>();
 
             LoadScene();
         }

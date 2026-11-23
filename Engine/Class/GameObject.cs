@@ -106,7 +106,7 @@ namespace MonoEngine.Class
             return result;
         }
 
-        public override void OnDestroy()
+        protected override void OnDestroy()
         {
             if (!string.IsNullOrEmpty(name))
                 nameToGameObject.Remove(name);
@@ -116,7 +116,7 @@ namespace MonoEngine.Class
                 if (comp)
                 {
                     if (comp.Enabled) comp.OnDisable();
-                    comp.OnDestroy();
+                    comp.Destroy();
                 }
             }
             components.Clear();

@@ -195,7 +195,7 @@ namespace MonoEngine.Class
             }
         }
 
-        public override void OnDestroy()
+        protected override void OnDestroy()
         {
             Stop();
         }
