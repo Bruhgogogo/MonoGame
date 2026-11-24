@@ -14,8 +14,8 @@ namespace MonoEngine
 {
     public sealed class MonoEngine : Game
     {
-        static public GraphicsDeviceManager Graphics;
-        static public SpriteBatch SpriteBatch;
+        static public GraphicsDeviceManager Graphics { get; private set; }
+        static public SpriteBatch SpriteBatch { get; private set; }
         static public PhysicalEngine physicalEngine { get; private set; }
 
         static public Vector2 ViewportSize
@@ -69,19 +69,24 @@ namespace MonoEngine
             }
         }
 
-        static public List<Renderer> RendererList;
-        static public List<Behaviour> BehaviourList;
-        static public List<GCObject> PendingGCList;
+        static public List<Renderer> RendererList { get; private set; }
+        static public List<Behaviour> BehaviourList { get; private set; }
+        static public List<GCObject> PendingGCList { get; private set; }
 
-        static public ContentManager ResourceManager;
+        static public ContentManager ResourceManager { get; private set; }
         static private MonoEngine MainGameInstance;
 
         public const float METER_TO_PIXEL = 192.0f;
         public const float PIXEL_TO_METER = 1.0f / 192.0f;
 
-        private const int DEFAULT_WINDOW_WIDTH = 1280;
-        private const int DEFAULT_WINDOW_HEIGHT = 720;
-        private const string DEFAULT_WINDOW_TITLE = "My Test";
+        public const int DEFAULT_RENDERER_LIST_SIZE = 1024;
+        public const int DEFAULT_BEHAVIOUR_LIST_SIZE = 1024;
+        public const int DEFAULT_COLLIDER_LIST_SIZE = 1024;
+        public const int DEFAULT_GC_LIST_SIZE = 512;
+
+        public const int DEFAULT_WINDOW_WIDTH = 1280;
+        public const int DEFAULT_WINDOW_HEIGHT = 720;
+        public const string DEFAULT_WINDOW_TITLE = "My Test";
 
         public MonoEngine()
         {
@@ -110,9 +115,9 @@ namespace MonoEngine
         {
             SpriteBatch = new SpriteBatch(GraphicsDevice);
 
-            RendererList = new List<Renderer>();
-            BehaviourList = new List<Behaviour>();
-            PendingGCList = new List<GCObject>();
+            RendererList = new List<Renderer>(DEFAULT_RENDERER_LIST_SIZE);
+            BehaviourList = new List<Behaviour>(DEFAULT_BEHAVIOUR_LIST_SIZE);
+            PendingGCList = new List<GCObject>(DEFAULT_GC_LIST_SIZE);
 
             LoadScene();
         }

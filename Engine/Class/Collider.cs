@@ -40,8 +40,9 @@ namespace MonoEngine.Class
             }
         }
 
+        public Transform transform;
+
         protected MonoCollisionActor collisionActor;
-        protected Transform transform;
 
         protected Vector2 lastPosition;
         protected Vector2 lastScale;
@@ -53,6 +54,8 @@ namespace MonoEngine.Class
             RecordLastTransform();
 
             collisionActor = new MonoCollisionActor(BuildCollisionShape(), GO);
+
+            PhysicalEngine.MonoColliders.Add(this);
         }
 
         public override void Start()
@@ -90,37 +93,57 @@ namespace MonoEngine.Class
 
         public bool IntersectsWith(Collider otherCollider)
         {
-            return collisionActor.Shape.Intersects(otherCollider.collisionActor.Shape);
+            return GetShape().Intersects(otherCollider.GetShape());
         }
 
         public bool IntersectsWith(Line2D line2D)
         {
-            return collisionActor.Shape.Intersects(line2D);
+            return GetShape().Intersects(line2D);
         }
 
         public bool IntersectsWith(LineSegment2D lineSegment2D)
         {
-            return collisionActor.Shape.Intersects(lineSegment2D);
+            return GetShape().Intersects(lineSegment2D);
         }
 
         public bool IntersectsWith(Ray2D ray2D)
         {
-            return collisionActor.Shape.Intersects(ray2D);
+            return GetShape().Intersects(ray2D);
         }
 
         public bool IntersectsWith(LineSegment2D lineSegment2D, out float? TimeMin, out float? TimeMax)
         {
-            return collisionActor.Shape.Intersects(lineSegment2D, out TimeMin, out TimeMax);
+            return GetShape().Intersects(lineSegment2D, out TimeMin, out TimeMax);
         }
 
         public bool IntersectsWith(Ray2D ray2D, out float? TimeMin, out float? TimeMax)
         {
-            return collisionActor.Shape.Intersects(ray2D, out TimeMin, out TimeMax);
+            return GetShape().Intersects(ray2D, out TimeMin, out TimeMax);
+        }
+
+        public bool BoundingBoxIntersectsWith(Collider otherCollider)
+        {
+            return GetShape().BoundingBox.Intersects(otherCollider.GetShape().BoundingBox);
+        }
+
+        public bool BoundingBoxIntersectsWith(LineSegment2D lineSegment2D)
+        {
+            return GetShape().BoundingBox.Intersects(lineSegment2D.GetBounds());
         }
 
         public bool ResovleCollision(Collider otherCollider, out CollisionResult2D result)
         {
-            return collisionActor.Shape.TryGetCollision(otherCollider.collisionActor.Shape, out result);
+            return GetShape().TryGetCollision(otherCollider.GetShape(), out result);
+        }
+
+        public bool ResovleBoundingBoxCollision(Collider otherCollider, out CollisionResult2D result)
+        {
+            return GetShape().BoundingBox.TryGetCollision(otherCollider.GetShape().BoundingBox, out result);
+        }
+
+        public CollisionShape2D GetShape()
+        {
+            return collisionActor.Shape;
         }
 
         public virtual CollisionShape2D BuildCollisionShape() { throw new NotSupportedException("MonoEngine: Attempt to call BuildCollisionShape on base Collider"); }
