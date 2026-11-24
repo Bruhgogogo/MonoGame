@@ -39,7 +39,6 @@ namespace MyMonoGame.Class
         private ColliderBox boxCollider;
         private Transform transform;
         private AudioSource audioSource;
-        private BoxCollider boxCollider; 
 
         private Vector2 cameraVelocity = Vector2.Zero;
 

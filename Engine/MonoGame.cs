@@ -14,8 +14,8 @@ namespace MonoEngine
 {
     public sealed class MonoEngine : Game
     {
-        static public GraphicsDeviceManager Graphics;
-        static public SpriteBatch SpriteBatch;
+        static public GraphicsDeviceManager Graphics { get; private set; }
+        static public SpriteBatch SpriteBatch { get; private set; }
         static public PhysicalEngine physicalEngine { get; private set; }
 
         static public Vector2 ViewportSize
