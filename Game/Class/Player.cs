@@ -20,7 +20,7 @@ namespace MonoGame.Class
         public float GroundFric = 10.0f;
         public float AirFric = 0.25f;
 
-        public float Gravity = 980.0f;
+        public float Gravity = 1000.0f;
         public float JumpForce = 600.0f;
 
         public Vector2 Velocity = Vector2.Zero;
@@ -43,6 +43,7 @@ namespace MonoGame.Class
             audioSource = GetOrAddComponent<AudioSource>();
             audioSource.Is3D = true;
         }
+
         public override void Start()
         {
             Texture2D playerTexture = MonoEngine.MonoEngine.ResourceManager.Load<Texture2D>("ExperimentPlushieConstruction");
@@ -124,7 +125,7 @@ namespace MonoGame.Class
             if (!camera)
                 return;
 
-            camera.transform.Position = Vector2Ex.SmoothDamp(camera.transform.Position, transform.Position, ref cameraVelocity, 0.1f, float.PositiveInfinity, deltaTime);
+            camera.transform.Position = Vector2Ex.SmoothDamp(camera.transform.Position, transform.Position, ref cameraVelocity, 0.1f, deltaTime);
         }
 
         private void CheckGroundCollision()
