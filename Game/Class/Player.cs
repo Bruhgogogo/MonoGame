@@ -1,12 +1,17 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
+
 using MonoEngine.MonoUtils;
 using MonoEngine.Class;
-using System;
-using Microsoft.Xna.Framework.Audio;
+using Engine = MonoEngine.MonoEngine;
 
-namespace MonoGame.Class
+using System;
+
+using Microsoft.Xna.Framework.Audio;
+using MonoGame.Extended;
+
+namespace MyMonoGame.Class
 {
     public class PlayerScript : Behaviour
     {
@@ -31,6 +36,7 @@ namespace MonoGame.Class
         private bool isGrounded = false;
 
         private RendererSprite rendererSprite;
+        private ColliderBox boxCollider;
         private Transform transform;
         private AudioSource audioSource;
 
@@ -39,15 +45,18 @@ namespace MonoGame.Class
         public override void Awake()
         {
             rendererSprite = GetOrAddComponent<RendererSprite>();
+            boxCollider = GetOrAddComponent<ColliderBox>();
             transform = GetOrAddComponent<Transform>();
             audioSource = GetOrAddComponent<AudioSource>();
+
+            boxCollider.IsStatic = false;
             audioSource.Is3D = true;
         }
 
         public override void Start()
         {
-            Texture2D playerTexture = MonoEngine.MonoEngine.ResourceManager.Load<Texture2D>("ExperimentPlushieConstruction");
-            SoundEffect bgm = MonoEngine.MonoEngine.ResourceManager.Load<SoundEffect>("Ice");
+            Texture2D playerTexture = Engine.ResourceManager.Load<Texture2D>("ExperimentPlushieConstruction");
+            SoundEffect bgm = Engine.ResourceManager.Load<SoundEffect>("Ice");
 
             rendererSprite.Texture = playerTexture;
             rendererSprite.Origin = new Vector2(0.5f, 0.5f);
@@ -57,6 +66,11 @@ namespace MonoGame.Class
             audioSource.Clip = bgm;
             audioSource.Loop = true;
             audioSource.Play();
+        }
+
+        public override void OnCollision(CollisionResult2D collisionResult, GameObject collisionGameObject)
+        {
+            transform.Translate(collisionResult.MinimumTranslationVector);
         }
 
         private bool IsMouseOnTheRight(float x)
@@ -94,7 +108,7 @@ namespace MonoGame.Class
                 if (!isGrounded)
                     return;
 
-                Velocity.Y = -JumpForce;
+                Velocity.Y = JumpForce;
                 isGrounded = false;
             }
         }
@@ -109,14 +123,14 @@ namespace MonoGame.Class
         {
             if (!isGrounded)
             {
-                Velocity.Y += Gravity * deltaTime;
+                Velocity.Y -= Gravity * deltaTime;
             }
         }
 
         private void ApplyVelocity(float deltaTime)
         {
             Velocity = Vector2Ex.ApplyDeadZone(Velocity, 1.0f);
-            transform.Position += Velocity * deltaTime;
+            transform.Translate(Velocity * deltaTime);
         }
 
         private void CameraFollow(float deltaTime)
@@ -126,21 +140,6 @@ namespace MonoGame.Class
                 return;
 
             camera.transform.Position = Vector2Ex.SmoothDamp(camera.transform.Position, transform.Position, ref cameraVelocity, 0.1f, deltaTime);
-        }
-
-        private void CheckGroundCollision()
-        {
-            float groundY = MonoEngine.MonoEngine.ViewportSize.Y - transform.Scale.Y * rendererSprite.Origin.Y;
-            if (transform.Position.Y >= groundY)
-            {
-                transform.Position = new Vector2(transform.Position.X, groundY);
-                Velocity.Y = 0f;
-                isGrounded = true;
-            }
-            else
-            {
-                isGrounded = false;
-            }
         }
 
         public override void Update(GameTime gameTime)
@@ -156,7 +155,6 @@ namespace MonoGame.Class
             ApplyGravity(deltaTime);
             ApplyVelocity(deltaTime);
             CameraFollow(deltaTime);
-            CheckGroundCollision();
         }
     }
 }
