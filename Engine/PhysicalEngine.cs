@@ -3,7 +3,6 @@ using MonoEngine.Class;
 using MonoGame.Extended;
 using MonoGame.Extended.Collisions;
 using MonoGame.Extended.Collisions.Layers;
-using System.Diagnostics;
 
 namespace MonoEngine
 {

@@ -2,7 +2,6 @@
 using MonoGame.Extended;
 using MonoGame.Extended.Collisions;
 using System;
-using Engine = MonoEngine.MonoEngine;
 
 namespace MonoEngine.Class
 {
