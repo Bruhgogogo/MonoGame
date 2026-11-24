@@ -16,6 +16,7 @@ namespace MonoEngine
 
     public struct RaycastResult
     {
+        public Collider ColliderComponent;
         public Vector2 ContactPoint;
         public Vector2 Normal;
         public Vector2 Direction;
@@ -69,6 +70,7 @@ namespace MonoEngine
             LineSegment2D lineSegment = new LineSegment2D(origin, origin + direction);
             RaycastResult raycastResult = new RaycastResult();
             raycastResult.Hit = false;
+            raycastResult.ColliderComponent = null;
             raycastResult.ContactPoint = Vector2.Zero;
             raycastResult.Normal = Vector2.Zero;
             raycastResult.Direction = Vector2.Zero;
@@ -131,6 +133,7 @@ namespace MonoEngine
                 CollisionResult2D collisionResult;
                 if (probeShape.TryGetCollision(bestCollider.GetShape(), out collisionResult))
                 {
+                    raycastResult.ColliderComponent = bestCollider;
                     raycastResult.ContactPoint = enterPoint;
                     raycastResult.Direction = rayDirection;
                     raycastResult.Normal = collisionResult.Normal;

@@ -9,10 +9,7 @@ using Engine = MonoEngine.MonoEngine;
 using System;
 
 using Microsoft.Xna.Framework.Audio;
-using MonoGame.Extended;
 using MonoEngine;
-using System.Diagnostics;
-using System.Collections.Generic;
 
 namespace MyMonoGame.Class
 {
