@@ -15,7 +15,7 @@ namespace MonoEngine.Class
         private Matrix cachedWorldMatrix = Matrix.Identity;
 
         private Transform parent;
-        private readonly List<Transform> children = new List<Transform>();
+        private readonly List<Transform> children = new List<Transform>(32);
 
         public Transform Parent
         {

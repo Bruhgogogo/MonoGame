@@ -74,10 +74,7 @@ namespace MonoEngine.Class
             }
             set
             {
-                if (Started)
-                {
-                    return;
-                }
+                if (Started) return;
                 is3D = value;
             }
         }

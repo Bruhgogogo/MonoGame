@@ -1,67 +1,146 @@
 ﻿using Microsoft.Xna.Framework;
+using MonoGame.Extended;
+using MonoGame.Extended.Collisions;
+using System;
+using Engine = MonoEngine.MonoEngine;
 
 namespace MonoEngine.Class
 {
-    public abstract class Collider : Component
+    public sealed class MonoCollisionActor : ICollisionActor
     {
-        public bool IsTrigger = false;
+        static private int internalID = 0;
 
-        public Vector2 Offset = Vector2.Zero;
+        public int Id { get; }
 
-        public abstract AABB GetAABB();
+        public CollisionShape2D shape;
+        public CollisionShape2D Shape => shape;
 
-        public abstract Vector2 ClosestPoint(Vector2 position);
+        public GameObject GO;
 
-        public abstract bool Contains(Vector2 point);
+        public MonoCollisionActor(CollisionShape2D collisionShape, GameObject go)
+        {
+            Id = ++internalID;
+            shape = collisionShape;
+            GO = go;
+        }
     }
 
-    public struct AABB
+    public class Collider : Behaviour
     {
-        public Vector2 Min;
-        public Vector2 Max;
-
-        public Vector2 Center => (Min + Max) * 0.5f;
-        public Vector2 Size => Max - Min;
-
-        public AABB(Vector2 min, Vector2 max)
-        {
-            Min = min;
-            Max = max;
-        }
-
-        public AABB(Vector2 center, float halfWidth, float halfHeight)
-        {
-            Min = new Vector2(center.X - halfWidth, center.Y - halfHeight);
-            Max = new Vector2(center.X + halfWidth, center.Y + halfHeight);
-        }
-
-        public bool Overlaps(AABB other)
-        {
-            return Min.X < other.Max.X && Max.X > other.Min.X &&
-                   Min.Y < other.Max.Y && Max.Y > other.Min.Y;
-        }
-
-        public AABB Union(AABB other)
-        {
-            return new AABB
+        private bool isStatic = true;
+        public bool IsStatic 
+        { 
+            get
             {
-                Min = new Vector2(MathHelper.Min(Min.X, other.Min.X), MathHelper.Min(Min.Y, other.Min.Y)),
-                Max = new Vector2(MathHelper.Max(Max.X, other.Max.X), MathHelper.Max(Max.Y, other.Max.Y))
-            };
+                return isStatic;
+            }
+            set
+            {
+                if (Started) return;
+                isStatic = value;
+            }
         }
 
-        public bool Contains(Vector2 point)
+        protected MonoCollisionActor collisionActor;
+        protected Transform transform;
+
+        protected Vector2 lastPosition;
+        protected Vector2 lastScale;
+        protected float lastRotation;
+
+        public override void Awake()
         {
-            return point.X >= Min.X && point.X <= Max.X &&
-                   point.Y >= Min.Y && point.Y <= Max.Y;
+            transform = GetOrAddComponent<Transform>();
+            RecordLastTransform();
+
+            collisionActor = new MonoCollisionActor(BuildCollisionShape(), GO);
         }
 
-        public Vector2 ClosestPoint(Vector2 point)
+        public override void Start()
         {
-            return new Vector2(
-                MathHelper.Clamp(point.X, Min.X, Max.X),
-                MathHelper.Clamp(point.Y, Min.Y, Max.Y)
-            );
+            PhysicalEngine.CollisionWorld.Insert(collisionActor, IsStatic ? PhysicalEngine.StaticLayerName : PhysicalEngine.MoveableLayerName);
+        }
+
+        public override void FixedUpdate(GameTime gameTime)
+        {
+            if (IsStatic) return;
+            if (IsTransformChanged())
+            {
+                RecordLastTransform();
+                collisionActor.shape = BuildCollisionShape();
+            }
+        }
+
+        protected override void OnDestroy()
+        {
+            if (PhysicalEngine.CollisionWorld.Contains(collisionActor))
+                PhysicalEngine.CollisionWorld.Remove(collisionActor);
+        }
+
+        protected bool IsTransformChanged()
+        {
+            return lastPosition != transform.Position || lastScale != transform.Scale || lastRotation != transform.Rotation;
+        }
+
+        protected void RecordLastTransform()
+        {
+            lastPosition = transform.Position;
+            lastScale = transform.Scale;
+            lastRotation = transform.Rotation;
+        }
+
+        public bool IntersectsWith(Collider otherCollider)
+        {
+            return collisionActor.Shape.Intersects(otherCollider.collisionActor.Shape);
+        }
+
+        public bool IntersectsWith(Line2D line2D)
+        {
+            return collisionActor.Shape.Intersects(line2D);
+        }
+
+        public bool IntersectsWith(LineSegment2D lineSegment2D)
+        {
+            return collisionActor.Shape.Intersects(lineSegment2D);
+        }
+
+        public bool IntersectsWith(Ray2D ray2D)
+        {
+            return collisionActor.Shape.Intersects(ray2D);
+        }
+
+        public bool IntersectsWith(LineSegment2D lineSegment2D, out float? TimeMin, out float? TimeMax)
+        {
+            return collisionActor.Shape.Intersects(lineSegment2D, out TimeMin, out TimeMax);
+        }
+
+        public bool IntersectsWith(Ray2D ray2D, out float? TimeMin, out float? TimeMax)
+        {
+            return collisionActor.Shape.Intersects(ray2D, out TimeMin, out TimeMax);
+        }
+
+        public bool ResovleCollision(Collider otherCollider, out CollisionResult2D result)
+        {
+            return collisionActor.Shape.TryGetCollision(otherCollider.collisionActor.Shape, out result);
+        }
+
+        public virtual CollisionShape2D BuildCollisionShape() { throw new NotSupportedException("MonoEngine: Attempt to call BuildCollisionShape on base Collider"); }
+    }
+
+    public class ColliderBox : Collider
+    {
+        public override CollisionShape2D BuildCollisionShape()
+        {
+            float c = MathF.Cos(transform.Rotation);
+            float s = MathF.Sin(transform.Rotation);
+
+            Vector2 center = transform.Position;
+            Vector2 axisX = new Vector2(c, s);
+            Vector2 axisY = new Vector2(-s, c);
+            Vector2 halfExtent = transform.Scale * 0.5f;
+
+            OrientedBoundingBox2D OBB = new OrientedBoundingBox2D(center, axisX, axisY, halfExtent);
+            return new CollisionShape2D(OBB);
         }
     }
 }

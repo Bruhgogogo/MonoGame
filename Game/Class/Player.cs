@@ -1,16 +1,17 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
-using Microsoft.Xna.Framework.Audio;
 
 using MonoEngine.MonoUtils;
 using MonoEngine.Class;
-
 using Engine = MonoEngine.MonoEngine;
 
 using System;
 
-namespace MonoGame.Class
+using Microsoft.Xna.Framework.Audio;
+using MonoGame.Extended;
+
+namespace MyMonoGame.Class
 {
     public class PlayerScript : Behaviour
     {
@@ -24,7 +25,7 @@ namespace MonoGame.Class
         public float GroundFric = 10.0f;
         public float AirFric = 0.25f;
 
-        public float Gravity = 980.0f;
+        public float Gravity = 1000.0f;
         public float JumpForce = 600.0f;
 
         public Vector2 Velocity = Vector2.Zero;
@@ -35,6 +36,7 @@ namespace MonoGame.Class
         private bool isGrounded = false;
 
         private RendererSprite rendererSprite;
+        private ColliderBox boxCollider;
         private Transform transform;
         private AudioSource audioSource;
         private BoxCollider boxCollider; 
@@ -44,12 +46,14 @@ namespace MonoGame.Class
         public override void Awake()
         {
             rendererSprite = GetOrAddComponent<RendererSprite>();
+            boxCollider = GetOrAddComponent<ColliderBox>();
             transform = GetOrAddComponent<Transform>();
             audioSource = GetOrAddComponent<AudioSource>();
-            boxCollider = GetOrAddComponent<BoxCollider>();
 
+            boxCollider.IsStatic = false;
             audioSource.Is3D = true;
         }
+
         public override void Start()
         {
             Texture2D playerTexture = Engine.ResourceManager.Load<Texture2D>("ExperimentPlushieConstruction");
@@ -63,6 +67,11 @@ namespace MonoGame.Class
             audioSource.Clip = bgm;
             audioSource.Loop = true;
             audioSource.Play();
+        }
+
+        public override void OnCollision(CollisionResult2D collisionResult, GameObject collisionGameObject)
+        {
+            transform.Translate(collisionResult.MinimumTranslationVector);
         }
 
         private bool IsMouseOnTheRight(float x)
@@ -122,7 +131,7 @@ namespace MonoGame.Class
         private void ApplyVelocity(float deltaTime)
         {
             Velocity = Vector2Ex.ApplyDeadZone(Velocity, 1.0f);
-            transform.Position += Velocity * deltaTime;
+            transform.Translate(Velocity * deltaTime);
         }
 
         private void CameraFollow(float deltaTime)
@@ -131,43 +140,7 @@ namespace MonoGame.Class
             if (!camera)
                 return;
 
-            camera.transform.Position = Vector2Ex.SmoothDamp(camera.transform.Position, transform.Position, ref cameraVelocity, 0.1f, float.PositiveInfinity, deltaTime);
-        }
-
-        private void CheckGroundCollision()
-        {
-            GameObject ground = GameObject.Find("Ground");
-            BoxCollider groundCollider = ground.GetComponent<BoxCollider>();
-
-            AABB playerAABB = boxCollider.GetAABB();
-            AABB groundAABB = groundCollider.GetAABB();
-
-            if (!playerAABB.Overlaps(groundAABB))
-            {
-                isGrounded = false;
-                return;
-            }
-
-            Vector2 playerBottomCenter = new Vector2(
-                transform.Position.X,
-                transform.Position.Y - transform.Scale.Y * 0.5f
-            );
-
-            if (groundCollider.Contains(playerBottomCenter) && Velocity.Y <= 0)
-            {
-                Vector2 groundSurface = groundCollider.ClosestPoint(playerBottomCenter);
-
-                transform.Position = new Vector2(
-                    transform.Position.X,
-                    groundSurface.Y + transform.Scale.Y * 0.5f
-                );
-                Velocity.Y = 0;
-                isGrounded = true;
-            }
-            else
-            {
-                isGrounded = false;
-            }
+            camera.transform.Position = Vector2Ex.SmoothDamp(camera.transform.Position, transform.Position, ref cameraVelocity, 0.1f, deltaTime);
         }
 
         public override void Update(GameTime gameTime)
@@ -183,7 +156,6 @@ namespace MonoGame.Class
             ApplyGravity(deltaTime);
             ApplyVelocity(deltaTime);
             CameraFollow(deltaTime);
-            CheckGroundCollision();
         }
     }
 }

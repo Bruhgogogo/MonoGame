@@ -1,4 +1,5 @@
 ﻿using Microsoft.Xna.Framework;
+using MonoGame.Extended;
 
 namespace MonoEngine.Class
 {
@@ -14,5 +15,6 @@ namespace MonoEngine.Class
         public virtual void Start() { }
         public virtual void Update(GameTime gameTime) { }
         public virtual void FixedUpdate(GameTime gameTime) { }
+        public virtual void OnCollision(CollisionResult2D collisionResult, GameObject collisionGameObject) { }
     }
 }

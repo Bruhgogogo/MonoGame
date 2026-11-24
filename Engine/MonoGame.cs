@@ -5,21 +5,18 @@ using Microsoft.Xna.Framework.Graphics;
 using MonoEngine.Class;
 using MonoEngine.MonoUtils;
 
-using MonoGame.Class;
+using MyMonoGame.Class;
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
-using System.Text.RegularExpressions;
-using System.Transactions;
-using System.Windows.Forms.Design.Behavior;
 
 namespace MonoEngine
 {
-    public class MonoEngine : Game
+    public sealed class MonoEngine : Game
     {
         static public GraphicsDeviceManager Graphics;
         static public SpriteBatch SpriteBatch;
+        static public PhysicalEngine physicalEngine { get; private set; }
 
         static public Vector2 ViewportSize
         {
@@ -76,8 +73,8 @@ namespace MonoEngine
         static public List<Behaviour> BehaviourList;
         static public List<GCObject> PendingGCList;
 
-        public static ContentManager ResourceManager;
-        private static MonoEngine MainGameInstance;
+        static public ContentManager ResourceManager;
+        static private MonoEngine MainGameInstance;
 
         public const float METER_TO_PIXEL = 192.0f;
         public const float PIXEL_TO_METER = 1.0f / 192.0f;
@@ -89,6 +86,9 @@ namespace MonoEngine
         public MonoEngine()
         {
             Graphics = new GraphicsDeviceManager(this);
+
+            physicalEngine = new PhysicalEngine();
+
             Content.RootDirectory = "Content";
             IsMouseVisible = true;
 
@@ -184,6 +184,8 @@ namespace MonoEngine
 
                 behaviour.FixedUpdate(gameTime);
             }
+
+            physicalEngine.UpdatePhysics(gameTime);
         }
 
         private void UpdateWorld(GameTime gameTime)
@@ -234,15 +236,16 @@ namespace MonoEngine
             playerObject.GetOrAddComponent<PlayerScript>();
 
             GameObject cameraObject = new GameObject("Camera");
-            //cameraObject.GetOrAddComponent<Camera>();
-            cameraObject.GetOrAddComponent<AudioListener>();
+            //cameraObject.AddComponent<Camera>();
+            cameraObject.AddComponent<AudioListener>();
 
-            GameObject ground = new GameObject("Ground");
-            ground.GetOrAddComponent<BoxCollider>();
+            GameObject groundObject = new GameObject("Ground");
+            Transform groundTransform = groundObject.AddComponent<Transform>();
 
-            Transform transform = ground.GetOrAddComponent<Transform>();
-            transform.Position = new Vector2(640.0f, -720.0f);
-            transform.Scale = new Vector2(1280.0f, 10.0f);
+            groundTransform.Position = new Vector2(640.0f, -720.0f);
+            groundTransform.Scale = new Vector2(1280.0f, 50.0f);
+
+            groundObject.AddComponent<ColliderBox>();
         }
     }
 }

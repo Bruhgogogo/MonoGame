@@ -29,10 +29,12 @@ namespace MonoEngine.Class
         {
             float biggestScale = MathF.Max(transform.Scale.X, transform.Scale.Y);
             Vector2 pixelOrigin = new Vector2(Origin.X * biggestScale, Origin.Y * biggestScale);
+            Vector2 flippedPosition = new Vector2(transform.Position.X, -transform.Position.Y);
+
             spriteBatch.DrawString(
                 Font,
                 Text,
-                new Vector2(transform.Position.X, -transform.Position.Y),
+                flippedPosition,
                 TextColor,
                 transform.Rotation,
                 pixelOrigin,

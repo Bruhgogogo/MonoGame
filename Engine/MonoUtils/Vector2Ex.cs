@@ -55,6 +55,11 @@ namespace MonoEngine.MonoUtils
             return output;
         }
 
+        public static Vector2 SmoothDamp(Vector2 current, Vector2 target, ref Vector2 currentVelocity, float smoothTime, float deltaTime)
+        {
+            return SmoothDamp(current, target, ref currentVelocity, smoothTime, float.PositiveInfinity, deltaTime);
+        }
+
         public static Vector2 ScreenToWorld(Vector2 screenPos, Camera camera)
         {
             Vector2 offset = screenPos - MonoEngine.ViewportSize * 0.5f;

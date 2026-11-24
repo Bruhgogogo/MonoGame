@@ -27,9 +27,11 @@ namespace MonoEngine.Class
         {
             Vector2 pixelSize = new Vector2(transform.Scale.X / Texture.Width, transform.Scale.Y / Texture.Height);
             Vector2 pixelOrigin = new Vector2(Origin.X * Texture.Width, Origin.Y * Texture.Height);
+            Vector2 flippedPosition = new Vector2(transform.Position.X, -transform.Position.Y);
+
             spriteBatch.Draw(
                 Texture,
-                new Vector2(transform.Position.X, -transform.Position.Y),
+                flippedPosition,
                 null,
                 TextureColor,
                 transform.Rotation,
