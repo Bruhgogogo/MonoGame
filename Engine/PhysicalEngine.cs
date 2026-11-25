@@ -14,7 +14,7 @@ namespace MonoEngine
         Exclude,
         Include,
     }
-
+    
     public struct RaycastResult
     {
         public Collider ColliderComponent;
@@ -23,6 +23,7 @@ namespace MonoEngine
         public Vector2 Direction;
         public float Distance;
         public float Fraction;
+        public float ExitFraction;
         public bool Hit;
     }
     
@@ -138,6 +139,7 @@ namespace MonoEngine
                 raycastResult.Normal = collisionResult.Normal;
                 raycastResult.Distance = (lineSegment.Start - enterPoint).Length();
                 raycastResult.Fraction = bestEnterTime;
+                raycastResult.ExitFraction = bestExitTime;
                 raycastResult.Hit = true;
                 return raycastResult;
             }
