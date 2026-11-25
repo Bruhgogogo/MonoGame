@@ -261,6 +261,27 @@ namespace MonoEngine.Class
                 Rotation = MathF.Atan2(-direction.Y, direction.X);
         }
 
+        public void RotateAround(Vector2 point, float angleRadians)
+        {
+            Vector2 direction = Position - point;
+
+            if (direction == Vector2.Zero)
+            {
+                Rotation += angleRadians;
+                return;
+            }
+
+            float cos = MathF.Cos(angleRadians);
+            float sin = MathF.Sin(angleRadians);
+            Vector2 rotatedDirection = new Vector2(
+                direction.X * cos - direction.Y * sin,
+                direction.X * sin + direction.Y * cos
+            );
+
+            Position = point + rotatedDirection;
+            Rotation += angleRadians;
+        }
+
         public Matrix GetMatrix()
         {
             return cachedWorldMatrix;
