@@ -1,7 +1,5 @@
 ﻿using Microsoft.Xna.Framework;
-using MonoEngine.MonoUtils;
 using System;
-using System.Collections.Generic;
 
 namespace MonoEngine.Class
 {
@@ -14,22 +12,7 @@ namespace MonoEngine.Class
         private Vector2 cachedWorldPosition = Vector2.Zero;
         private Matrix cachedWorldMatrix = Matrix.Identity;
 
-        private Transform parent;
-        private readonly List<Transform> children = new List<Transform>(32);
-
-        public Transform Parent
-        {
-            get => parent;
-            set
-            {
-                if (parent == value) return;
-                parent?.children.Remove(this);
-                parent = value;
-                value?.children.Add(this);
-                RecalculateCaches();
-                PropagateToChildren();
-            }
-        }
+        private Transform ParentTransform => GO?.Parent?.GetComponent<Transform>();
 
         public Vector2 LocalPosition
         {
@@ -69,14 +52,11 @@ namespace MonoEngine.Class
             get => cachedWorldPosition;
             set
             {
-                if (parent == null)
-                {
+                Transform p = ParentTransform;
+                if (!p)
                     localPosition = value;
-                }
                 else
-                {
-                    localPosition = parent.ToObjectSpace(value);
-                }
+                    localPosition = p.ToObjectSpace(value);
                 RecalculateCaches();
                 PropagateToChildren();
             }
@@ -86,23 +66,25 @@ namespace MonoEngine.Class
         {
             get
             {
-                if (parent == null) return localScale;
+                Transform p = ParentTransform;
+                if (!p) return localScale;
                 return new Vector2(
-                    localScale.X * parent.Scale.X,
-                    localScale.Y * parent.Scale.Y
+                    localScale.X * p.Scale.X,
+                    localScale.Y * p.Scale.Y
                 );
             }
             set
             {
-                if (parent == null)
+                Transform p = ParentTransform;
+                if (!p)
                 {
                     localScale = value;
                 }
                 else
                 {
                     localScale = new Vector2(
-                        parent.Scale.X != 0f ? value.X / parent.Scale.X : value.X,
-                        parent.Scale.Y != 0f ? value.Y / parent.Scale.Y : value.Y
+                        p.Scale.X != 0f ? value.X / p.Scale.X : value.X,
+                        p.Scale.Y != 0f ? value.Y / p.Scale.Y : value.Y
                     );
                 }
                 RecalculateCaches();
@@ -114,19 +96,17 @@ namespace MonoEngine.Class
         {
             get
             {
-                if (parent == null) return localRotation;
-                return localRotation + parent.Rotation;
+                Transform p = ParentTransform;
+                if (!p) return localRotation;
+                return localRotation + p.Rotation;
             }
             set
             {
-                if (parent == null)
-                {
+                Transform p = ParentTransform;
+                if (!p)
                     localRotation = value;
-                }
                 else
-                {
-                    localRotation = value - parent.Rotation;
-                }
+                    localRotation = value - p.Rotation;
                 RecalculateCaches();
                 PropagateToChildren();
             }
@@ -151,21 +131,13 @@ namespace MonoEngine.Class
             }
         }
 
-        public Vector2 Right
-        {
-            get
-            {
-                Vector2 forward = Forward;
-                return new Vector2(forward.Y, -forward.X);
-            }
-        }
-
-        private void RecalculateCaches()
+        internal void RecalculateCaches()
         {
             Matrix localMatrix = GetLocalMatrix();
-            if (parent != null)
+            Transform p = ParentTransform;
+            if (!p)
             {
-                cachedWorldMatrix = localMatrix * parent.cachedWorldMatrix;
+                cachedWorldMatrix = localMatrix * p.cachedWorldMatrix;
                 cachedWorldPosition = Vector2.Transform(Vector2.Zero, cachedWorldMatrix);
             }
             else
@@ -175,12 +147,18 @@ namespace MonoEngine.Class
             }
         }
 
-        private void PropagateToChildren()
+        internal void PropagateToChildren()
         {
-            for (int i = 0; i < children.Count; i++)
+            if (!GO) return;
+            var kids = GO.Childrens;
+            for (int i = 0; i < kids.Count; i++)
             {
-                children[i].RecalculateCaches();
-                children[i].PropagateToChildren();
+                Transform ct = kids[i].GetComponent<Transform>();
+                if (!ct)
+                {
+                    ct.RecalculateCaches();
+                    ct.PropagateToChildren();
+                }
             }
         }
 
@@ -259,27 +237,6 @@ namespace MonoEngine.Class
             Vector2 direction = target - Position;
             if (direction != Vector2.Zero)
                 Rotation = MathF.Atan2(-direction.Y, direction.X);
-        }
-
-        public void RotateAround(Vector2 point, float angleRadians)
-        {
-            Vector2 direction = Position - point;
-
-            if (direction == Vector2.Zero)
-            {
-                Rotation += angleRadians;
-                return;
-            }
-
-            float cos = MathF.Cos(angleRadians);
-            float sin = MathF.Sin(angleRadians);
-            Vector2 rotatedDirection = new Vector2(
-                direction.X * cos - direction.Y * sin,
-                direction.X * sin + direction.Y * cos
-            );
-
-            Position = point + rotatedDirection;
-            Rotation += angleRadians;
         }
 
         public Matrix GetMatrix()

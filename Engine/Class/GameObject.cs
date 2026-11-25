@@ -11,6 +11,30 @@ namespace MonoEngine.Class
         private List<Component> components = new List<Component>();
         private string name;
 
+        private GameObject parent;
+        private readonly List<GameObject> children = new List<GameObject>(32);
+
+        public GameObject Parent
+        {
+            get => parent;
+            set
+            {
+                if (parent == value || value == this) return;
+                parent?.children.Remove(this);
+                parent = value;
+                value?.children.Add(this);
+
+                Transform t = GetComponent<Transform>();
+                if (t)
+                {
+                    t.RecalculateCaches();
+                    t.PropagateToChildren();
+                }
+            }
+        }
+
+        public IReadOnlyList<GameObject> Childrens => children;
+
         public string Name
         {
             get => name;
@@ -78,6 +102,13 @@ namespace MonoEngine.Class
             component.GO = this;
             components.Add(component);
             component.Awake();
+
+            if (component is Transform t)
+            {
+                t.RecalculateCaches();
+                t.PropagateToChildren();
+            }
+
             return component;
         }
 
@@ -110,6 +141,25 @@ namespace MonoEngine.Class
         {
             if (!string.IsNullOrEmpty(name))
                 nameToGameObject.Remove(name);
+
+            for (int i = children.Count - 1; i >= 0; i--)
+            {
+                GameObject child = children[i];
+                child.parent = null;
+                Transform ct = child.GetComponent<Transform>();
+                if (ct)
+                {
+                    ct.RecalculateCaches();
+                    ct.PropagateToChildren();
+                }
+            }
+            children.Clear();
+
+            if (parent)
+            {
+                parent.children.Remove(this);
+                parent = null;
+            }
 
             foreach (var comp in components)
             {

@@ -68,6 +68,11 @@ namespace MyMonoGame.Class
             audioSource.Play();
         }
 
+        public Vector2 GetFoward()
+        {
+            return isFacingRight ? transform.Forward : -transform.Forward;
+        }
+
         private bool IsMouseOnTheRight(float x)
         {
             if (!Camera.Main)
