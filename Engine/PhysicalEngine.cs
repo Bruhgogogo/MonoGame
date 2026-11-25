@@ -24,7 +24,7 @@ namespace MonoEngine
 
     public struct RaycastResult
     {
-        public Collider ColliderComponent;
+        public GameObject GameObject;
         public Vector2 ContactPoint;
         public Vector2 Normal;
         public Vector2 Direction;
@@ -84,7 +84,7 @@ namespace MonoEngine
             LineSegment2D lineSegment = new LineSegment2D(origin, origin + direction);
             RaycastResult raycastResult = new RaycastResult();
             raycastResult.Hit = false;
-            raycastResult.ColliderComponent = null;
+            raycastResult.GameObject = null;
             raycastResult.ContactPoint = Vector2.Zero;
             raycastResult.Normal = Vector2.Zero;
             raycastResult.Direction = Vector2.Zero;
@@ -92,6 +92,7 @@ namespace MonoEngine
             raycastResult.Fraction = 0.0f;
 
             GameObject bestGameObject = null;
+            MonoCollisionActor bestMonoCollision = null;
 
             float bestEnterTime = float.MaxValue;
             float bestExitTime = float.MaxValue;
@@ -120,6 +121,7 @@ namespace MonoEngine
                         bestEnterTime = currentEnterTime;
                         bestExitTime = (float)exitTime;
                         bestGameObject = monoCollisionActor.GO;
+                        bestMonoCollision = monoCollisionActor;
                     }
                 }
             }
@@ -148,14 +150,13 @@ namespace MonoEngine
                         bestEnterTime = currentEnterTime;
                         bestExitTime = (float)exitTime;
                         bestGameObject = monoCollisionActor.GO;
+                        bestMonoCollision = monoCollisionActor;
                     }
                 }
             }
 
-            if (bestGameObject)
+            if (bestGameObject) // Remeber replace this logic when MonoGameExtended has normal trace
             {
-                Collider bestCollider = bestGameObject.GetComponent<Collider>();
-
                 Vector2 enterPoint = lineSegment.GetPoint(bestEnterTime);
                 Vector2 exitPoint = lineSegment.GetPoint(bestExitTime);
                 Vector2 center = (enterPoint + exitPoint) * 0.5f;
@@ -163,7 +164,7 @@ namespace MonoEngine
                 Vector2 rayDirection = lineSegment.Direction;
                 Vector2 lateralAxis = new Vector2(-rayDirection.Y, rayDirection.X);
 
-                CollisionShape2D bestColliderShape = bestCollider.Shape;
+                CollisionShape2D bestColliderShape = bestMonoCollision.Shape;
                 Vector2 boundsSize = bestColliderShape.BoundingBox.Max - bestColliderShape.BoundingBox.Min;
                 float characteristicLength = MathF.Max(boundsSize.X, boundsSize.Y);
                 float probeHalfLength = MathFEx.Clamp(characteristicLength * 1e-4f, 1e-5f, 1e-2f);
@@ -173,7 +174,8 @@ namespace MonoEngine
                 var probeShape = new CollisionShape2D(probeObb);
 
                 if (!probeShape.TryGetCollision(bestColliderShape, out CollisionResult2D collisionResult)) return raycastResult;
-                raycastResult.ColliderComponent = bestCollider;
+
+                raycastResult.GameObject = bestGameObject;
                 raycastResult.ContactPoint = enterPoint;
                 raycastResult.Direction = rayDirection;
                 raycastResult.Normal = collisionResult.Normal;
@@ -181,6 +183,7 @@ namespace MonoEngine
                 raycastResult.Fraction = bestEnterTime;
                 raycastResult.ExitFraction = bestExitTime;
                 raycastResult.Hit = true;
+
                 return raycastResult;
             }
 
