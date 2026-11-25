@@ -14,7 +14,14 @@ namespace MonoEngine
         Exclude,
         Include,
     }
-    
+
+    public enum RaycastBroadphaseFilter
+    {
+        Static,
+        Moveable,
+        All,
+    }
+
     public struct RaycastResult
     {
         public Collider ColliderComponent;
@@ -26,16 +33,18 @@ namespace MonoEngine
         public float ExitFraction;
         public bool Hit;
     }
-    
+
     public struct RaycastParams
     {
-        public HashSet<Collider> FilterColliders;
+        public HashSet<MonoCollisionActor> FilterColliders;
         public RaycastFilter FilterType;
+        public RaycastBroadphaseFilter BroadPhaseFilterType;
 
-        public RaycastParams(HashSet<Collider> filterColliders, RaycastFilter filterType)
+        public RaycastParams(HashSet<MonoCollisionActor> filterColliders, RaycastFilter filterType, RaycastBroadphaseFilter broadPhaseFilterType)
         {
             FilterColliders = filterColliders;
             FilterType = filterType;
+            BroadPhaseFilterType = broadPhaseFilterType;
         }
     }
     public sealed class PhysicalEngine
@@ -49,15 +58,18 @@ namespace MonoEngine
         private readonly SizeF STATIC_LAYER_GRID_SIZE = new SizeF(256.0f, 256.0f);
         private readonly SizeF MOVEABLE_LAYER_GRID_SIZE = new SizeF(256.0f, 256.0f);
 
+        static private Layer staticLayer;
+        static private Layer moveableLayer;
+
         public PhysicalEngine()
         {
             CollisionWorld = new CollisionWorld2D();
-            
+
             SpatialHash staticSpatial = new SpatialHash(STATIC_LAYER_GRID_SIZE);
             SpatialHash moveableSpatial = new SpatialHash(MOVEABLE_LAYER_GRID_SIZE);
 
-            Layer staticLayer = new Layer(staticSpatial) { IsDynamic = false };
-            Layer moveableLayer = new Layer(staticSpatial) { IsDynamic = true };
+            staticLayer = new Layer(staticSpatial) { IsDynamic = false };
+            moveableLayer = new Layer(moveableSpatial) { IsDynamic = true };
 
             CollisionWorld.AddLayer(STATIC_LAYER_NAME, staticLayer);
             CollisionWorld.AddLayer(MOVEABLE_LAYER_NAME, moveableLayer);
@@ -79,43 +91,71 @@ namespace MonoEngine
             raycastResult.Distance = 0.0f;
             raycastResult.Fraction = 0.0f;
 
-            Collider bestCollider = null;
+            GameObject bestGameObject = null;
 
             float bestEnterTime = float.MaxValue;
             float bestExitTime = float.MaxValue;
 
-            for (int i = MonoColliders.Count - 1; i >= 0; i--)
+            if (raycastParams.BroadPhaseFilterType == RaycastBroadphaseFilter.Static || raycastParams.BroadPhaseFilterType == RaycastBroadphaseFilter.All)
             {
-                Collider collider = MonoColliders[i];
-
-                if (!collider)
+                foreach (ICollisionActor colliderActor in staticLayer.Space.Query(lineSegment.GetBounds()))
                 {
-                    MonoColliders.SwapAndRemove(i);
-                    continue;
-                }
+                    MonoCollisionActor monoCollisionActor = (MonoCollisionActor)colliderActor;
 
-                bool shouldSkip = raycastParams.FilterType switch
-                {
-                    RaycastFilter.Include => !raycastParams.FilterColliders.Contains(collider),
-                    RaycastFilter.Exclude => raycastParams.FilterColliders.Contains(collider),
-                    _ => false
-                };
-                if (shouldSkip) continue;
-                if (!collider.BoundingBoxIntersectsWith(lineSegment)) continue;
-                if (!collider.IntersectsWith(lineSegment, out float? enterTime, out float? exitTime)) continue;
+                    bool shouldSkip = raycastParams.FilterType switch
+                    {
+                        RaycastFilter.Include => !raycastParams.FilterColliders.Contains(monoCollisionActor),
+                        RaycastFilter.Exclude => raycastParams.FilterColliders.Contains(monoCollisionActor),
+                        _ => false
+                    };
+                    if (shouldSkip) continue;
 
-                float currentEnterTime = (float)enterTime;
+                    CollisionShape2D shape2D = colliderActor.Shape;
+                    if (!shape2D.Intersects(lineSegment, out float? enterTime, out float? exitTime)) continue;
 
-                if (currentEnterTime < bestEnterTime)
-                {
-                    bestEnterTime = currentEnterTime;
-                    bestExitTime = (float)exitTime;
-                    bestCollider = collider;
+                    float currentEnterTime = (float)enterTime;
+
+                    if (currentEnterTime < bestEnterTime)
+                    {
+                        bestEnterTime = currentEnterTime;
+                        bestExitTime = (float)exitTime;
+                        bestGameObject = monoCollisionActor.GO;
+                    }
                 }
             }
 
-            if (bestCollider)
+            if (raycastParams.BroadPhaseFilterType == RaycastBroadphaseFilter.Moveable || raycastParams.BroadPhaseFilterType == RaycastBroadphaseFilter.All)
             {
+                foreach (ICollisionActor colliderActor in moveableLayer.Space.Query(lineSegment.GetBounds()))
+                {
+                    MonoCollisionActor monoCollisionActor = (MonoCollisionActor)colliderActor;
+
+                    bool shouldSkip = raycastParams.FilterType switch
+                    {
+                        RaycastFilter.Include => !raycastParams.FilterColliders.Contains(monoCollisionActor),
+                        RaycastFilter.Exclude => raycastParams.FilterColliders.Contains(monoCollisionActor),
+                        _ => false
+                    };
+                    if (shouldSkip) continue;
+
+                    CollisionShape2D shape2D = colliderActor.Shape;
+                    if (!shape2D.Intersects(lineSegment, out float? enterTime, out float? exitTime)) continue;
+
+                    float currentEnterTime = (float)enterTime;
+
+                    if (currentEnterTime < bestEnterTime)
+                    {
+                        bestEnterTime = currentEnterTime;
+                        bestExitTime = (float)exitTime;
+                        bestGameObject = monoCollisionActor.GO;
+                    }
+                }
+            }
+
+            if (bestGameObject)
+            {
+                Collider bestCollider = bestGameObject.GetComponent<Collider>();
+
                 Vector2 enterPoint = lineSegment.GetPoint(bestEnterTime);
                 Vector2 exitPoint = lineSegment.GetPoint(bestExitTime);
                 Vector2 center = (enterPoint + exitPoint) * 0.5f;
@@ -123,7 +163,7 @@ namespace MonoEngine
                 Vector2 rayDirection = lineSegment.Direction;
                 Vector2 lateralAxis = new Vector2(-rayDirection.Y, rayDirection.X);
 
-                CollisionShape2D bestColliderShape = bestCollider.GetShape();
+                CollisionShape2D bestColliderShape = bestCollider.Shape;
                 Vector2 boundsSize = bestColliderShape.BoundingBox.Max - bestColliderShape.BoundingBox.Min;
                 float characteristicLength = MathF.Max(boundsSize.X, boundsSize.Y);
                 float probeHalfLength = MathFEx.Clamp(characteristicLength * 1e-4f, 1e-5f, 1e-2f);
@@ -147,17 +187,16 @@ namespace MonoEngine
             return raycastResult;
         }
 
-        static public RaycastResult Raycast(Vector2 origin, Vector2 direction, Collider collider, bool exclude = true)
+        static public RaycastResult Raycast(Vector2 origin, Vector2 direction, MonoCollisionActor collider, RaycastFilter raycastFilter = RaycastFilter.Exclude, RaycastBroadphaseFilter raycastBroadphaseFilter = RaycastBroadphaseFilter.All)
         {
-            HashSet<Collider> filter = new HashSet<Collider> { collider };
-            RaycastFilter filterType = exclude ? RaycastFilter.Exclude : RaycastFilter.Include;
-            RaycastParams raycastParams = new RaycastParams(filter, filterType);
+            HashSet<MonoCollisionActor> filter = new HashSet<MonoCollisionActor> { collider };
+            RaycastParams raycastParams = new RaycastParams(filter, raycastFilter, raycastBroadphaseFilter);
             return Raycast(origin, direction, raycastParams);
         }
 
         static public RaycastResult Raycast(Vector2 origin, Vector2 direction)
         {
-            RaycastParams raycastParams = new RaycastParams(new HashSet<Collider>(), RaycastFilter.Exclude);
+            RaycastParams raycastParams = new RaycastParams(new HashSet<MonoCollisionActor>(), RaycastFilter.Exclude, RaycastBroadphaseFilter.All);
             return Raycast(origin, direction, raycastParams);
         }
 

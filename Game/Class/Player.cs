@@ -131,7 +131,7 @@ namespace MyMonoGame.Class
             Vector2 origin = transform.Position - new Vector2(0.0f, transform.Scale.Y * rendererSprite.Origin.Y + 1.0f);
             Vector2 direction = new Vector2(0.0f, -1.0f);
 
-            RaycastResult result = PhysicalEngine.Raycast(origin, direction, colliderBox);
+            RaycastResult result = PhysicalEngine.Raycast(origin, direction, colliderBox.CollisionActor);
             isGrounded = result.Hit;
         }
 
