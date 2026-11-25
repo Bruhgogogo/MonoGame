@@ -4,6 +4,7 @@ using MonoEngine.MonoUtils;
 using MonoGame.Extended;
 using MonoGame.Extended.Collisions;
 using MonoGame.Extended.Collisions.Layers;
+using System;
 using System.Collections.Generic;
 
 namespace MonoEngine
@@ -124,24 +125,25 @@ namespace MonoEngine
                 Vector2 rayDirection = lineSegment.Direction;
                 Vector2 lateralAxis = new Vector2(-rayDirection.Y, rayDirection.X);
 
-                float probeHalfLength = 1e-3f;
-                float probeHalfWidth = 1e-3f;
+                CollisionShape2D bestColliderShape = bestCollider.GetShape();
+                Vector2 boundsSize = bestColliderShape.BoundingBox.Max - bestColliderShape.BoundingBox.Min;
+                float characteristicLength = MathF.Max(boundsSize.X, boundsSize.Y);
+                float probeHalfLength = MathFEx.Clamp(characteristicLength * 1e-4f, 1e-5f, 1e-2f);
+                float probeHalfWidth = probeHalfLength;
 
                 var probeObb = new OrientedBoundingBox2D(center, rayDirection, lateralAxis, new Vector2(probeHalfLength, probeHalfWidth));
                 var probeShape = new CollisionShape2D(probeObb);
 
                 CollisionResult2D collisionResult;
-                if (probeShape.TryGetCollision(bestCollider.GetShape(), out collisionResult))
-                {
-                    raycastResult.ColliderComponent = bestCollider;
-                    raycastResult.ContactPoint = enterPoint;
-                    raycastResult.Direction = rayDirection;
-                    raycastResult.Normal = collisionResult.Normal;
-                    raycastResult.Distance = (lineSegment.Start - enterPoint).Length();
-                    raycastResult.Fraction = bestEnterTime;
-                    raycastResult.Hit = true;
-                    return raycastResult;
-                }
+                if (!probeShape.TryGetCollision(bestCollider.GetShape(), out collisionResult)) return raycastResult;
+                raycastResult.ColliderComponent = bestCollider;
+                raycastResult.ContactPoint = enterPoint;
+                raycastResult.Direction = rayDirection;
+                raycastResult.Normal = collisionResult.Normal;
+                raycastResult.Distance = (lineSegment.Start - enterPoint).Length();
+                raycastResult.Fraction = bestEnterTime;
+                raycastResult.Hit = true;
+                return raycastResult;
             }
 
             return raycastResult;

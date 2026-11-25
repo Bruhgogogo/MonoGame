@@ -4,17 +4,17 @@ namespace MonoEngine.MonoUtils
 {
     public static class MathFEx
     {
-        private static float Clamp01(float value)
+        public static float Clamp01(float value)
         {
             return value < 0f ? 0f : (value > 1f ? 1f : value);
         }
 
-        private static float Repeat(float t, float length)
+        public static float Repeat(float t, float length)
         {
             return Clamp(t - (float)Math.Floor(t / length) * length, 0f, length);
         }
 
-        private static float Clamp(float value, float min, float max)
+        public static float Clamp(float value, float min, float max)
         {
             return value < min ? min : (value > max ? max : value);
         }
