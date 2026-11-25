@@ -60,7 +60,7 @@ namespace MonoEngine.Class
 
         public override void Start()
         {
-            PhysicalEngine.CollisionWorld.Insert(collisionActor, IsStatic ? PhysicalEngine.StaticLayerName : PhysicalEngine.MoveableLayerName);
+            PhysicalEngine.CollisionWorld.Insert(collisionActor, IsStatic ? PhysicalEngine.STATIC_LAYER_NAME : PhysicalEngine.MOVEABLE_LAYER_NAME);
         }
 
         public override void FixedUpdate(GameTime gameTime)

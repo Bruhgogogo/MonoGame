@@ -42,26 +42,26 @@ namespace MonoEngine
         static public CollisionWorld2D CollisionWorld { get; private set; }
         static public List<Collider> MonoColliders { get; private set; }
 
-        public const string StaticLayerName = "StaticLayer";
-        public const string MoveableLayerName = "MoveableLayer";
+        public const string STATIC_LAYER_NAME = "StaticLayer";
+        public const string MOVEABLE_LAYER_NAME = "MoveableLayer";
 
-        private SizeF staticLayerGridSize = new SizeF(256.0f, 256.0f);
-        private SizeF moveableLayerGridSize = new SizeF(256.0f, 256.0f);
+        private readonly SizeF STATIC_LAYER_GRID_SIZE = new SizeF(256.0f, 256.0f);
+        private readonly SizeF MOVEABLE_LAYER_GRID_SIZE = new SizeF(256.0f, 256.0f);
 
         public PhysicalEngine()
         {
             CollisionWorld = new CollisionWorld2D();
-
-            SpatialHash staticSpatial = new SpatialHash(staticLayerGridSize);
-            SpatialHash moveableSpatial = new SpatialHash(moveableLayerGridSize);
+            
+            SpatialHash staticSpatial = new SpatialHash(STATIC_LAYER_GRID_SIZE);
+            SpatialHash moveableSpatial = new SpatialHash(MOVEABLE_LAYER_GRID_SIZE);
 
             Layer staticLayer = new Layer(staticSpatial) { IsDynamic = false };
             Layer moveableLayer = new Layer(staticSpatial) { IsDynamic = true };
 
-            CollisionWorld.AddLayer(StaticLayerName, staticLayer);
-            CollisionWorld.AddLayer(MoveableLayerName, moveableLayer);
-            CollisionWorld.EnableCollisionBetweenLayers(StaticLayerName, MoveableLayerName);
-            CollisionWorld.EnableCollisionBetweenLayers(MoveableLayerName, MoveableLayerName);
+            CollisionWorld.AddLayer(STATIC_LAYER_NAME, staticLayer);
+            CollisionWorld.AddLayer(MOVEABLE_LAYER_NAME, moveableLayer);
+            CollisionWorld.EnableCollisionBetweenLayers(STATIC_LAYER_NAME, MOVEABLE_LAYER_NAME);
+            CollisionWorld.EnableCollisionBetweenLayers(MOVEABLE_LAYER_NAME, MOVEABLE_LAYER_NAME);
 
             MonoColliders = new List<Collider>(MonoEngine.DEFAULT_COLLIDER_LIST_SIZE);
         }
@@ -101,10 +101,7 @@ namespace MonoEngine
                 };
                 if (shouldSkip) continue;
                 if (!collider.BoundingBoxIntersectsWith(lineSegment)) continue;
-
-                float? enterTime;
-                float? exitTime;
-                if (!collider.IntersectsWith(lineSegment, out enterTime, out exitTime)) continue;
+                if (!collider.IntersectsWith(lineSegment, out float? enterTime, out float? exitTime)) continue;
 
                 float currentEnterTime = (float)enterTime;
 
@@ -134,8 +131,7 @@ namespace MonoEngine
                 var probeObb = new OrientedBoundingBox2D(center, rayDirection, lateralAxis, new Vector2(probeHalfLength, probeHalfWidth));
                 var probeShape = new CollisionShape2D(probeObb);
 
-                CollisionResult2D collisionResult;
-                if (!probeShape.TryGetCollision(bestCollider.GetShape(), out collisionResult)) return raycastResult;
+                if (!probeShape.TryGetCollision(bestColliderShape, out CollisionResult2D collisionResult)) return raycastResult;
                 raycastResult.ColliderComponent = bestCollider;
                 raycastResult.ContactPoint = enterPoint;
                 raycastResult.Direction = rayDirection;
@@ -167,7 +163,7 @@ namespace MonoEngine
         {
             CollisionWorld.RebuildDynamicLayers();
 
-            foreach (CollisionPair2D pair in CollisionWorld.QueryCollisionPairs(MoveableLayerName, StaticLayerName))
+            foreach (CollisionPair2D pair in CollisionWorld.QueryCollisionPairs(MOVEABLE_LAYER_NAME, STATIC_LAYER_NAME))
             {
                 MonoCollisionActor first = (MonoCollisionActor)pair.First;
                 MonoCollisionActor second = (MonoCollisionActor)pair.Second;
@@ -179,7 +175,7 @@ namespace MonoEngine
                 secondBehaviour?.OnCollision(pair.SecondResult, first.GO);
             }
 
-            foreach (CollisionPair2D pair in CollisionWorld.QueryCollisionPairs(MoveableLayerName, MoveableLayerName))
+            foreach (CollisionPair2D pair in CollisionWorld.QueryCollisionPairs(MOVEABLE_LAYER_NAME, MOVEABLE_LAYER_NAME))
             {
                 MonoCollisionActor first = (MonoCollisionActor)pair.First;
                 MonoCollisionActor second = (MonoCollisionActor)pair.Second;
