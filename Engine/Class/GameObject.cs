@@ -73,12 +73,12 @@ namespace MonoEngine.Class
             return go;
         }
 
-        public GameObject FindChild(string childPath)
+        public GameObject FindChild(string childName)
         {
             if (this == null) return null;
-            if (string.IsNullOrWhiteSpace(childPath)) return this;
+            if (string.IsNullOrWhiteSpace(childName)) return this;
 
-            string target = path == null ? childPath : path + "/" + childPath;
+            string target = path == null ? childName : path + "/" + childName;
             pathToGameObject.TryGetValue(target, out var go);
             return go;
         }
