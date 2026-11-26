@@ -69,8 +69,6 @@ namespace MonoEngine.Class
             RecordLastTransform();
 
             collisionActor = new MonoCollisionActor(BuildCollisionShape(), GO);
-
-            PhysicalEngine.MonoColliders.Add(this);
         }
 
         public override void Start()

@@ -83,7 +83,6 @@ namespace MonoEngine
 
         public const int DEFAULT_RENDERER_LIST_SIZE = 1024;
         public const int DEFAULT_BEHAVIOUR_LIST_SIZE = 1024;
-        public const int DEFAULT_COLLIDER_LIST_SIZE = 1024;
         public const int DEFAULT_GC_LIST_SIZE = 512;
 
         public const int DEFAULT_WINDOW_WIDTH = 1280;
