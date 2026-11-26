@@ -3,24 +3,25 @@ using Microsoft.Xna.Framework;
 
 namespace MonoEngine.Class
 {
-    public sealed class RendererSprite : Renderer
+    public sealed class RectangleRenderer : Renderer
     {
         public Texture2D Texture;
         public Vector2 Origin = Vector2.Zero;
         public Color TextureColor = Color.White;
         public int SortingLayer = 0;
-        public bool FlipX = false, FlipY = false, Visible = true;
-
-        private Transform transform;
+        public bool Visible = true;
+        public Transform transform;
 
         public override void Awake()
         {
+            Texture = MonoEngine.WhitePixel;
+
             transform = GetOrAddComponent<Transform>();
         }
 
         public override bool IsVisible()
         {
-            return Visible && Texture != null && spriteBatch != null && TextureColor.A != 0;
+            return Visible && spriteBatch != null && TextureColor.A != 0;
         }
 
         public override void Draw()
@@ -34,20 +35,12 @@ namespace MonoEngine.Class
                 flippedPosition,
                 null,
                 TextureColor,
-                transform.Rotation,
+                -transform.Rotation,
                 pixelOrigin,
                 pixelSize,
-                GetSpriteEffect(),
+                SpriteEffects.None,
                 SortingLayer
             );
-        }
-
-        private SpriteEffects GetSpriteEffect()
-        {
-            SpriteEffects flag = SpriteEffects.None;
-            if (FlipX) flag |= SpriteEffects.FlipHorizontally;
-            if (FlipY) flag |= SpriteEffects.FlipVertically;
-            return flag;
         }
     }
 }

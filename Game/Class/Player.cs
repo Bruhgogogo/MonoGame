@@ -39,7 +39,7 @@ namespace MyMonoGame.Class
 
         private bool isGrounded = false;
 
-        private RendererSprite rendererSprite;
+        private SpriteRenderer rendererSprite;
         private GunScript gunScript;
         private AudioSource audioSource;
 
@@ -48,7 +48,7 @@ namespace MyMonoGame.Class
         public override void Awake()
         {
             transform = GetOrAddComponent<Transform>();
-            rendererSprite = GetOrAddComponent<RendererSprite>();
+            rendererSprite = GetOrAddComponent<SpriteRenderer>();
             boxCollider = GetOrAddComponent<BoxCollider>();
             audioSource = GetOrAddComponent<AudioSource>();
 

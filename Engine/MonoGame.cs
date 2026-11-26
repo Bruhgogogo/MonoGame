@@ -14,9 +14,9 @@ namespace MonoEngine
 {
     public sealed class MonoEngine : Game
     {
-        static public GraphicsDeviceManager Graphics { get; private set; }
         static public SpriteBatch SpriteBatch { get; private set; }
-        static public PhysicalEngine physicalEngine { get; private set; }
+
+        static public Texture2D WhitePixel { get; private set; }
 
         static public Vector2 ViewportSize
         {
@@ -72,9 +72,11 @@ namespace MonoEngine
         static public List<Renderer> RendererList { get; private set; }
         static public List<Behaviour> BehaviourList { get; private set; }
         static public List<GCObject> PendingGCList { get; private set; }
-
         static public ContentManager ResourceManager { get; private set; }
+
         static private MonoEngine MainGameInstance;
+        static private PhysicalEngine physicalEngine;
+        static private GraphicsDeviceManager Graphics;
 
         public const float METER_TO_PIXEL = 192.0f;
         public const float PIXEL_TO_METER = 1.0f / 192.0f;
@@ -114,6 +116,8 @@ namespace MonoEngine
         protected override void LoadContent()
         {
             SpriteBatch = new SpriteBatch(GraphicsDevice);
+            WhitePixel = new Texture2D(GraphicsDevice, 1, 1);
+            WhitePixel.SetData(new[] { Color.White });
 
             RendererList = new List<Renderer>(DEFAULT_RENDERER_LIST_SIZE);
             BehaviourList = new List<Behaviour>(DEFAULT_BEHAVIOUR_LIST_SIZE);
@@ -249,10 +253,14 @@ namespace MonoEngine
             cameraObject.AddComponent<AudioListener>();
 
             GameObject groundObject = new GameObject("Ground");
-            Transform groundTransform = groundObject.AddComponent<Transform>();
 
+            Transform groundTransform = groundObject.AddComponent<Transform>();
             groundTransform.Position = new Vector2(640.0f, -720.0f);
             groundTransform.Scale = new Vector2(1280.0f, 50.0f);
+            groundTransform.Rotation = 15.0f * MathFEx.Deg2Rad;
+
+            RectangleRenderer rectangleRenderer = groundObject.AddComponent<RectangleRenderer>();
+            rectangleRenderer.Origin = new Vector2(0.5f, 0.5f);
 
             groundObject.AddComponent<BoxCollider>();
         }
