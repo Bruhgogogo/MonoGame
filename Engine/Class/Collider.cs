@@ -156,12 +156,12 @@ namespace MonoEngine.Class
             return Shape.BoundingBox.TryGetCollision(otherCollider.Shape.BoundingBox, out result);
         }
 
-        public virtual CollisionShape2D BuildCollisionShape() { throw new NotSupportedException("MonoEngine: Attempt to call BuildCollisionShape on base Collider"); }
+        protected virtual CollisionShape2D BuildCollisionShape() { throw new NotSupportedException("MonoEngine: Attempt to call BuildCollisionShape on base Collider"); }
     }
 
-    public class ColliderBox : Collider
+    public class BoxCollider : Collider
     {
-        public override CollisionShape2D BuildCollisionShape()
+        protected override CollisionShape2D BuildCollisionShape()
         {
             float c = MathF.Cos(transform.Rotation);
             float s = MathF.Sin(transform.Rotation);

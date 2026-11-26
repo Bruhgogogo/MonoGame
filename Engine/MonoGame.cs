@@ -240,6 +240,10 @@ namespace MonoEngine
             GameObject playerObject = new GameObject("Player");
             playerObject.AddComponent<PlayerScript>();
 
+            GameObject gunObject = new GameObject("Gun");
+            gunObject.AddComponent<GunScript>();
+            gunObject.Parent = playerObject;
+
             GameObject cameraObject = new GameObject("Camera");
             //cameraObject.AddComponent<Camera>();
             cameraObject.AddComponent<AudioListener>();
@@ -250,7 +254,7 @@ namespace MonoEngine
             groundTransform.Position = new Vector2(640.0f, -720.0f);
             groundTransform.Scale = new Vector2(1280.0f, 50.0f);
 
-            groundObject.AddComponent<ColliderBox>();
+            groundObject.AddComponent<BoxCollider>();
         }
     }
 }

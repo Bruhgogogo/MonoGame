@@ -1,15 +1,15 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
+using Microsoft.Xna.Framework.Audio;
+using MonoEngine;
 
 using MonoEngine.MonoUtils;
 using MonoEngine.Class;
 using Engine = MonoEngine.MonoEngine;
 
 using System;
-
-using Microsoft.Xna.Framework.Audio;
-using MonoEngine;
+using System.Diagnostics;
 
 namespace MyMonoGame.Class
 {
@@ -28,6 +28,9 @@ namespace MyMonoGame.Class
         public float Gravity = 1000.0f;
         public float JumpForce = 600.0f;
 
+        public Transform transform;
+        public BoxCollider boxCollider;
+
         public Vector2 Velocity = Vector2.Zero;
 
         private bool isFacingRight = false;
@@ -36,25 +39,26 @@ namespace MyMonoGame.Class
         private bool isGrounded = false;
 
         private RendererSprite rendererSprite;
-        private ColliderBox colliderBox;
-        private Transform transform;
+        private GunScript gunScript;
         private AudioSource audioSource;
 
         private Vector2 cameraVelocity = Vector2.Zero;
 
         public override void Awake()
         {
-            rendererSprite = GetOrAddComponent<RendererSprite>();
-            colliderBox = GetOrAddComponent<ColliderBox>();
-            transform = GetOrAddComponent<Transform>();
-            audioSource = GetOrAddComponent<AudioSource>();
+            transform = AddComponent<Transform>();
+            rendererSprite = AddComponent<RendererSprite>();
+            boxCollider = AddComponent<BoxCollider>();
+            audioSource = AddComponent<AudioSource>();
 
-            colliderBox.IsStatic = false;
+            boxCollider.IsStatic = false;
             audioSource.Is3D = true;
         }
 
         public override void Start()
         {
+            GetComponentInChildren(out gunScript);
+
             Texture2D playerTexture = Engine.ResourceManager.Load<Texture2D>("ExperimentPlushieConstruction");
             SoundEffect bgm = Engine.ResourceManager.Load<SoundEffect>("Ice");
 
@@ -79,6 +83,11 @@ namespace MyMonoGame.Class
                 return x > transform.Position.X;
             
             return Camera.Main.ScreenToWorld(new Vector2(x, 0.0f)).X > transform.Position.X;
+        }
+
+        private void ProcessInput(KeyboardState keyboardState, MouseState mouseState)
+        {
+            if (mouseState.LeftButton == ButtonState.Pressed) gunScript?.Shoot();
         }
 
         private void ProcessMove(KeyboardState keyboardState, float deltaTime)
@@ -125,29 +134,33 @@ namespace MyMonoGame.Class
             {
                 Velocity.Y -= Gravity * deltaTime;
             }
-            else if (isGrounded && Velocity.Y < 0.0f)
+            else
             {
-                Velocity.Y = 0.0f;
+                Velocity.Y = MathF.Max(Velocity.Y, 0.0f);
             }
         }
 
         private void ProcessGround(float deltaTime)
         {
+            if (!transform) return;
+
             Vector2 origin = transform.Position - new Vector2(0.0f, transform.Scale.Y * rendererSprite.Origin.Y + 1.0f);
             Vector2 direction = new Vector2(0.0f, -1.0f);
 
-            RaycastResult result = PhysicalEngine.Raycast(origin, direction, colliderBox.CollisionActor);
+            RaycastResult result = PhysicalEngine.Raycast(origin, direction, boxCollider.CollisionActor);
             isGrounded = result.Hit;
         }
 
         private void ApplyVelocity(float deltaTime)
         {
             Velocity = Vector2Ex.ApplyDeadZone(Velocity, 1.0f);
-            transform.Translate(Velocity * deltaTime);
+            transform?.Translate(Velocity * deltaTime);
         }
 
         private void CameraFollow(float deltaTime)
         {
+            if (!transform) return;
+
             Camera camera = Camera.Main;
             if (!camera)
                 return;
@@ -160,9 +173,10 @@ namespace MyMonoGame.Class
             float deltaTime = MathF.Min((float)gameTime.ElapsedGameTime.TotalSeconds, 0.1f);
 
             MouseState mouseState = Mouse.GetState();
-            ProcessLook(mouseState);
-
             KeyboardState keyboardState = Keyboard.GetState();
+
+            ProcessLook(mouseState);
+            ProcessInput(keyboardState, mouseState);
             ProcessMove(keyboardState, deltaTime);
 
             CameraFollow(deltaTime);

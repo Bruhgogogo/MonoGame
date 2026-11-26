@@ -135,7 +135,7 @@ namespace MonoEngine.Class
         {
             Matrix localMatrix = GetLocalMatrix();
             Transform p = ParentTransform;
-            if (!p)
+            if (p)
             {
                 cachedWorldMatrix = localMatrix * p.cachedWorldMatrix;
                 cachedWorldPosition = Vector2.Transform(Vector2.Zero, cachedWorldMatrix);
@@ -154,7 +154,7 @@ namespace MonoEngine.Class
             for (int i = 0; i < kids.Count; i++)
             {
                 Transform ct = kids[i].GetComponent<Transform>();
-                if (!ct)
+                if (ct)
                 {
                     ct.RecalculateCaches();
                     ct.PropagateToChildren();
@@ -254,7 +254,7 @@ namespace MonoEngine.Class
 
         public override string ToString()
         {
-            return $"Position: {Position}, Rotation: {Rotation:F2} rad ({Rotation * 57.29578f:F1}°), Scale: {Scale}";
+            return $"Position: {Position}, Rotation: {Rotation:F2}), Scale: {Scale}";
         }
     }
 }
