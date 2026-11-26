@@ -14,9 +14,9 @@ namespace MonoEngine
 {
     public sealed class MonoEngine : Game
     {
-        static public GraphicsDeviceManager Graphics { get; private set; }
         static public SpriteBatch SpriteBatch { get; private set; }
-        static public PhysicalEngine physicalEngine { get; private set; }
+
+        static public Texture2D WhitePixel { get; private set; }
 
         static public Vector2 ViewportSize
         {
@@ -69,19 +69,26 @@ namespace MonoEngine
             }
         }
 
-        static public List<Renderer> RendererList;
-        static public List<Behaviour> BehaviourList;
-        static public List<GCObject> PendingGCList;
+        static public List<Renderer> RendererList { get; private set; }
+        static public List<Behaviour> BehaviourList { get; private set; }
+        static public List<GCObject> PendingGCList { get; private set; }
+        static public ContentManager ResourceManager { get; private set; }
 
-        static public ContentManager ResourceManager;
         static private MonoEngine MainGameInstance;
+        static private PhysicalEngine physicalEngine;
+        static private GraphicsDeviceManager Graphics;
 
         public const float METER_TO_PIXEL = 192.0f;
         public const float PIXEL_TO_METER = 1.0f / 192.0f;
 
-        private const int DEFAULT_WINDOW_WIDTH = 1280;
-        private const int DEFAULT_WINDOW_HEIGHT = 720;
-        private const string DEFAULT_WINDOW_TITLE = "My Test";
+        public const int DEFAULT_RENDERER_LIST_SIZE = 1024;
+        public const int DEFAULT_BEHAVIOUR_LIST_SIZE = 1024;
+        public const int DEFAULT_COLLIDER_LIST_SIZE = 1024;
+        public const int DEFAULT_GC_LIST_SIZE = 512;
+
+        public const int DEFAULT_WINDOW_WIDTH = 1280;
+        public const int DEFAULT_WINDOW_HEIGHT = 720;
+        public const string DEFAULT_WINDOW_TITLE = "My Test";
 
         public MonoEngine()
         {
@@ -109,10 +116,12 @@ namespace MonoEngine
         protected override void LoadContent()
         {
             SpriteBatch = new SpriteBatch(GraphicsDevice);
+            WhitePixel = new Texture2D(GraphicsDevice, 1, 1);
+            WhitePixel.SetData(new[] { Color.White });
 
-            RendererList = new List<Renderer>();
-            BehaviourList = new List<Behaviour>();
-            PendingGCList = new List<GCObject>();
+            RendererList = new List<Renderer>(DEFAULT_RENDERER_LIST_SIZE);
+            BehaviourList = new List<Behaviour>(DEFAULT_BEHAVIOUR_LIST_SIZE);
+            PendingGCList = new List<GCObject>(DEFAULT_GC_LIST_SIZE);
 
             LoadScene();
         }
@@ -140,7 +149,7 @@ namespace MonoEngine
 
         private void BeginRenderPass()
         {
-            Matrix viewMatrix = (Camera.Main != null && Camera.Main.Enabled) ? Camera.Main.GetViewMatrix() : Matrix.Identity;
+            Matrix viewMatrix = (Camera.Main && Camera.Main.Enabled) ? Camera.Main.GetViewMatrix() : Matrix.Identity;
             SpriteBatch.Begin(SpriteSortMode.Deferred, null, null, null, null, null, viewMatrix);
         }
 
@@ -235,17 +244,25 @@ namespace MonoEngine
             GameObject playerObject = new GameObject("Player");
             playerObject.GetOrAddComponent<PlayerScript>();
 
+            GameObject gunObject = new GameObject("Gun");
+            gunObject.AddComponent<GunScript>();
+            gunObject.Parent = playerObject;
+
             GameObject cameraObject = new GameObject("Camera");
-            //cameraObject.AddComponent<Camera>();
+            cameraObject.AddComponent<Camera>();
             cameraObject.AddComponent<AudioListener>();
 
             GameObject groundObject = new GameObject("Ground");
-            Transform groundTransform = groundObject.AddComponent<Transform>();
 
+            Transform groundTransform = groundObject.AddComponent<Transform>();
             groundTransform.Position = new Vector2(640.0f, -720.0f);
             groundTransform.Scale = new Vector2(1280.0f, 50.0f);
+            groundTransform.Rotation = 15.0f * MathFEx.Deg2Rad;
 
-            groundObject.AddComponent<ColliderBox>();
+            RectangleRenderer rectangleRenderer = groundObject.AddComponent<RectangleRenderer>();
+            rectangleRenderer.Origin = new Vector2(0.5f, 0.5f);
+
+            groundObject.AddComponent<BoxCollider>();
         }
     }
 }

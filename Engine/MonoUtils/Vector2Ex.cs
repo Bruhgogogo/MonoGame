@@ -1,5 +1,6 @@
 ﻿using Microsoft.Xna.Framework;
 using MonoEngine.Class;
+using MonoGame.Extended;
 using System;
 
 namespace MonoEngine.MonoUtils

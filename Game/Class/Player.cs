@@ -1,14 +1,15 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
+using Microsoft.Xna.Framework.Audio;
+using MonoEngine;
 
 using MonoEngine.MonoUtils;
 using MonoEngine.Class;
 using Engine = MonoEngine.MonoEngine;
 
 using System;
-
-using Microsoft.Xna.Framework.Audio;
+using System.Diagnostics;
 using MonoGame.Extended;
 
 namespace MyMonoGame.Class
@@ -28,6 +29,9 @@ namespace MyMonoGame.Class
         public float Gravity = 1000.0f;
         public float JumpForce = 600.0f;
 
+        public Transform transform;
+        public BoxCollider boxCollider;
+
         public Vector2 Velocity = Vector2.Zero;
 
         private bool isFacingRight = false;
@@ -35,18 +39,17 @@ namespace MyMonoGame.Class
 
         private bool isGrounded = false;
 
-        private RendererSprite rendererSprite;
-        private ColliderBox boxCollider;
-        private Transform transform;
+        private SpriteRenderer rendererSprite;
+        private GunScript gunScript;
         private AudioSource audioSource;
 
         private Vector2 cameraVelocity = Vector2.Zero;
 
         public override void Awake()
         {
-            rendererSprite = GetOrAddComponent<RendererSprite>();
-            boxCollider = GetOrAddComponent<ColliderBox>();
             transform = GetOrAddComponent<Transform>();
+            rendererSprite = GetOrAddComponent<SpriteRenderer>();
+            boxCollider = GetOrAddComponent<BoxCollider>();
             audioSource = GetOrAddComponent<AudioSource>();
 
             boxCollider.IsStatic = false;
@@ -55,6 +58,8 @@ namespace MyMonoGame.Class
 
         public override void Start()
         {
+            GetComponentInChildren(out gunScript);
+
             Texture2D playerTexture = Engine.ResourceManager.Load<Texture2D>("ExperimentPlushieConstruction");
             SoundEffect bgm = Engine.ResourceManager.Load<SoundEffect>("Ice");
 
@@ -68,17 +73,33 @@ namespace MyMonoGame.Class
             audioSource.Play();
         }
 
-        public override void OnCollision(CollisionResult2D collisionResult, GameObject collisionGameObject)
+        public Vector2 GetFoward()
         {
-            transform.Translate(collisionResult.MinimumTranslationVector);
+            return isFacingRight ? transform.Forward : -transform.Forward;
         }
 
         private bool IsMouseOnTheRight(float x)
         {
-            if (!Camera.Main)
-                return x > transform.Position.X;
+            Camera camera = Camera.Main;
+            if (!camera) return x > transform.Position.X;
             
-            return Camera.Main.ScreenToWorld(new Vector2(x, 0.0f)).X > transform.Position.X;
+            return camera.ScreenToWorld(new Vector2(x, 0.0f)).X > transform.Position.X;
+        }
+
+        private void ProcessInput(KeyboardState keyboardState, MouseState mouseState)
+        {
+            if (mouseState.LeftButton == ButtonState.Pressed)
+            {
+                Camera camera = Camera.Main;
+                if (!camera) return;
+
+                Vector2 mouseWorldPos = camera.ScreenToWorld(new Vector2(mouseState.X, mouseState.Y));
+                
+                Vector2 origin = transform.Position;
+                Vector2 direction = Vector2Ex.DirectionTo(origin, mouseWorldPos);
+
+                gunScript.Shoot(origin, direction);
+            }
         }
 
         private void ProcessMove(KeyboardState keyboardState, float deltaTime)
@@ -125,6 +146,19 @@ namespace MyMonoGame.Class
             {
                 Velocity.Y -= Gravity * deltaTime;
             }
+            else
+            {
+                Velocity.Y = MathF.Max(Velocity.Y, 0.0f);
+            }
+        }
+
+        private void ProcessGround(float deltaTime)
+        {
+            Vector2 origin = transform.Position - new Vector2(0.0f, transform.Scale.Y * rendererSprite.Origin.Y);
+            Vector2 direction = new Vector2(0.0f, -1.0f);
+
+            RaycastResult result = PhysicalEngine.Raycast(origin, direction, boxCollider.CollisionActor);
+            isGrounded = result.Hit;
         }
 
         private void ApplyVelocity(float deltaTime)
@@ -147,14 +181,22 @@ namespace MyMonoGame.Class
             float deltaTime = MathF.Min((float)gameTime.ElapsedGameTime.TotalSeconds, 0.1f);
 
             MouseState mouseState = Mouse.GetState();
-            ProcessLook(mouseState);
-
             KeyboardState keyboardState = Keyboard.GetState();
+
+            ProcessLook(mouseState);
+            ProcessInput(keyboardState, mouseState);
             ProcessMove(keyboardState, deltaTime);
+
+            CameraFollow(deltaTime);
+        }
+
+        public override void FixedUpdate(GameTime gameTime)
+        {
+            float deltaTime = MathF.Min((float)gameTime.ElapsedGameTime.TotalSeconds, 0.1f);
 
             ApplyGravity(deltaTime);
             ApplyVelocity(deltaTime);
-            CameraFollow(deltaTime);
+            ProcessGround(deltaTime);
         }
     }
 }

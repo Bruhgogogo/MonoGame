@@ -2,7 +2,6 @@
 using MonoGame.Extended;
 using MonoGame.Extended.Collisions;
 using System;
-using Engine = MonoEngine.MonoEngine;
 
 namespace MonoEngine.Class
 {
@@ -41,8 +40,24 @@ namespace MonoEngine.Class
             }
         }
 
+        public Transform transform;
+
+        public CollisionShape2D Shape
+        {
+            get
+            {
+                return collisionActor.shape;
+            }
+        }
+
         protected MonoCollisionActor collisionActor;
-        protected Transform transform;
+        public MonoCollisionActor CollisionActor
+        {
+            get
+            {
+                return collisionActor;
+            }
+        }
 
         protected Vector2 lastPosition;
         protected Vector2 lastScale;
@@ -54,11 +69,13 @@ namespace MonoEngine.Class
             RecordLastTransform();
 
             collisionActor = new MonoCollisionActor(BuildCollisionShape(), GO);
+
+            PhysicalEngine.MonoColliders.Add(this);
         }
 
         public override void Start()
         {
-            PhysicalEngine.CollisionWorld.Insert(collisionActor, IsStatic ? PhysicalEngine.StaticLayerName : PhysicalEngine.MoveableLayerName);
+            PhysicalEngine.CollisionWorld.Insert(collisionActor, IsStatic ? PhysicalEngine.STATIC_LAYER_NAME : PhysicalEngine.MOVEABLE_LAYER_NAME);
         }
 
         public override void FixedUpdate(GameTime gameTime)
@@ -91,45 +108,60 @@ namespace MonoEngine.Class
 
         public bool IntersectsWith(Collider otherCollider)
         {
-            return collisionActor.Shape.Intersects(otherCollider.collisionActor.Shape);
+            return Shape.Intersects(otherCollider.Shape);
         }
 
         public bool IntersectsWith(Line2D line2D)
         {
-            return collisionActor.Shape.Intersects(line2D);
+            return Shape.Intersects(line2D);
         }
 
         public bool IntersectsWith(LineSegment2D lineSegment2D)
         {
-            return collisionActor.Shape.Intersects(lineSegment2D);
+            return Shape.Intersects(lineSegment2D);
         }
 
         public bool IntersectsWith(Ray2D ray2D)
         {
-            return collisionActor.Shape.Intersects(ray2D);
+            return Shape.Intersects(ray2D);
         }
 
         public bool IntersectsWith(LineSegment2D lineSegment2D, out float? TimeMin, out float? TimeMax)
         {
-            return collisionActor.Shape.Intersects(lineSegment2D, out TimeMin, out TimeMax);
+            return Shape.Intersects(lineSegment2D, out TimeMin, out TimeMax);
         }
 
         public bool IntersectsWith(Ray2D ray2D, out float? TimeMin, out float? TimeMax)
         {
-            return collisionActor.Shape.Intersects(ray2D, out TimeMin, out TimeMax);
+            return Shape.Intersects(ray2D, out TimeMin, out TimeMax);
+        }
+
+        public bool BoundingBoxIntersectsWith(Collider otherCollider)
+        {
+            return Shape.BoundingBox.Intersects(otherCollider.Shape.BoundingBox);
+        }
+
+        public bool BoundingBoxIntersectsWith(LineSegment2D lineSegment2D)
+        {
+            return Shape.BoundingBox.Intersects(lineSegment2D.GetBounds());
         }
 
         public bool ResovleCollision(Collider otherCollider, out CollisionResult2D result)
         {
-            return collisionActor.Shape.TryGetCollision(otherCollider.collisionActor.Shape, out result);
+            return Shape.TryGetCollision(otherCollider.Shape, out result);
         }
 
-        public virtual CollisionShape2D BuildCollisionShape() { throw new NotSupportedException("MonoEngine: Attempt to call BuildCollisionShape on base Collider"); }
+        public bool ResovleBoundingBoxCollision(Collider otherCollider, out CollisionResult2D result)
+        {
+            return Shape.BoundingBox.TryGetCollision(otherCollider.Shape.BoundingBox, out result);
+        }
+
+        protected virtual CollisionShape2D BuildCollisionShape() { throw new NotSupportedException("MonoEngine: Attempt to call BuildCollisionShape on base Collider"); }
     }
 
-    public class ColliderBox : Collider
+    public class BoxCollider : Collider
     {
-        public override CollisionShape2D BuildCollisionShape()
+        protected override CollisionShape2D BuildCollisionShape()
         {
             float c = MathF.Cos(transform.Rotation);
             float s = MathF.Sin(transform.Rotation);

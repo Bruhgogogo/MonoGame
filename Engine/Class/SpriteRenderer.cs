@@ -1,19 +1,16 @@
-﻿using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Graphics;
-using System;
+﻿using Microsoft.Xna.Framework.Graphics;
+using Microsoft.Xna.Framework;
 
 namespace MonoEngine.Class
 {
-    public sealed class RendererText : Renderer
+    public sealed class SpriteRenderer : Renderer
     {
-        public SpriteFont Font;
+        public Texture2D Texture;
         public Vector2 Origin = Vector2.Zero;
-        public Color TextColor = Color.White;
-        public string Text = "";
+        public Color TextureColor = Color.White;
         public int SortingLayer = 0;
         public bool FlipX = false, FlipY = false, Visible = true;
-
-        private Transform transform;
+        public Transform transform;
 
         public override void Awake()
         {
@@ -22,23 +19,23 @@ namespace MonoEngine.Class
 
         public override bool IsVisible()
         {
-            return Visible && Font != null && spriteBatch != null && !string.IsNullOrEmpty(Text) && TextColor.A != 0;
+            return Visible && Texture != null && spriteBatch != null && TextureColor.A != 0;
         }
 
         public override void Draw()
         {
-            float biggestScale = MathF.Max(transform.Scale.X, transform.Scale.Y);
-            Vector2 pixelOrigin = new Vector2(Origin.X * biggestScale, Origin.Y * biggestScale);
+            Vector2 pixelSize = new Vector2(transform.Scale.X / Texture.Width, transform.Scale.Y / Texture.Height);
+            Vector2 pixelOrigin = new Vector2(Origin.X * Texture.Width, Origin.Y * Texture.Height);
             Vector2 flippedPosition = new Vector2(transform.Position.X, -transform.Position.Y);
 
-            spriteBatch.DrawString(
-                Font,
-                Text,
+            spriteBatch.Draw(
+                Texture,
                 flippedPosition,
-                TextColor,
-                transform.Rotation,
+                null,
+                TextureColor,
+                -transform.Rotation,
                 pixelOrigin,
-                biggestScale,
+                pixelSize,
                 GetSpriteEffect(),
                 SortingLayer
             );

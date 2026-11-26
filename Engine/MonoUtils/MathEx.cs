@@ -4,17 +4,20 @@ namespace MonoEngine.MonoUtils
 {
     public static class MathFEx
     {
-        private static float Clamp01(float value)
+        public const float Deg2Rad = MathF.PI / 180.0f;
+        public const float Rad2Deg = 180.0f / MathF.PI;
+
+        public static float Clamp01(float value)
         {
             return value < 0f ? 0f : (value > 1f ? 1f : value);
         }
 
-        private static float Repeat(float t, float length)
+        public static float Repeat(float t, float length)
         {
             return Clamp(t - (float)Math.Floor(t / length) * length, 0f, length);
         }
 
-        private static float Clamp(float value, float min, float max)
+        public static float Clamp(float value, float min, float max)
         {
             return value < min ? min : (value > max ? max : value);
         }
@@ -204,6 +207,9 @@ namespace MonoEngine.MonoUtils
 
     public static class MathEx
     {
+        public const double Deg2Rad = Math.PI / 180.0f;
+        public const double Rad2Deg = 180.0f / Math.PI;
+
         private static double Clamp01(double value)
         {
             return value < 0.0 ? 0.0 : (value > 1.0 ? 1.0 : value);
