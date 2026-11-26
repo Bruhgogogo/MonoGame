@@ -10,6 +10,7 @@ using Engine = MonoEngine.MonoEngine;
 
 using System;
 using System.Diagnostics;
+using MonoGame.Extended;
 
 namespace MyMonoGame.Class
 {
@@ -46,10 +47,10 @@ namespace MyMonoGame.Class
 
         public override void Awake()
         {
-            transform = AddComponent<Transform>();
-            rendererSprite = AddComponent<RendererSprite>();
-            boxCollider = AddComponent<BoxCollider>();
-            audioSource = AddComponent<AudioSource>();
+            transform = GetOrAddComponent<Transform>();
+            rendererSprite = GetOrAddComponent<RendererSprite>();
+            boxCollider = GetOrAddComponent<BoxCollider>();
+            audioSource = GetOrAddComponent<AudioSource>();
 
             boxCollider.IsStatic = false;
             audioSource.Is3D = true;
@@ -79,15 +80,26 @@ namespace MyMonoGame.Class
 
         private bool IsMouseOnTheRight(float x)
         {
-            if (!Camera.Main)
-                return x > transform.Position.X;
+            Camera camera = Camera.Main;
+            if (!camera) return x > transform.Position.X;
             
-            return Camera.Main.ScreenToWorld(new Vector2(x, 0.0f)).X > transform.Position.X;
+            return camera.ScreenToWorld(new Vector2(x, 0.0f)).X > transform.Position.X;
         }
 
         private void ProcessInput(KeyboardState keyboardState, MouseState mouseState)
         {
-            if (mouseState.LeftButton == ButtonState.Pressed) gunScript?.Shoot();
+            if (mouseState.LeftButton == ButtonState.Pressed)
+            {
+                Camera camera = Camera.Main;
+                if (!camera) return;
+
+                Vector2 mouseWorldPos = camera.ScreenToWorld(new Vector2(mouseState.X, mouseState.Y));
+                
+                Vector2 origin = transform.Position;
+                Vector2 direction = Vector2Ex.DirectionTo(origin, mouseWorldPos);
+
+                gunScript.Shoot(origin, direction);
+            }
         }
 
         private void ProcessMove(KeyboardState keyboardState, float deltaTime)
@@ -142,9 +154,7 @@ namespace MyMonoGame.Class
 
         private void ProcessGround(float deltaTime)
         {
-            if (!transform) return;
-
-            Vector2 origin = transform.Position - new Vector2(0.0f, transform.Scale.Y * rendererSprite.Origin.Y + 1.0f);
+            Vector2 origin = transform.Position - new Vector2(0.0f, transform.Scale.Y * rendererSprite.Origin.Y);
             Vector2 direction = new Vector2(0.0f, -1.0f);
 
             RaycastResult result = PhysicalEngine.Raycast(origin, direction, boxCollider.CollisionActor);
@@ -154,13 +164,11 @@ namespace MyMonoGame.Class
         private void ApplyVelocity(float deltaTime)
         {
             Velocity = Vector2Ex.ApplyDeadZone(Velocity, 1.0f);
-            transform?.Translate(Velocity * deltaTime);
+            transform.Translate(Velocity * deltaTime);
         }
 
         private void CameraFollow(float deltaTime)
         {
-            if (!transform) return;
-
             Camera camera = Camera.Main;
             if (!camera)
                 return;

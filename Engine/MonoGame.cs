@@ -145,7 +145,7 @@ namespace MonoEngine
 
         private void BeginRenderPass()
         {
-            Matrix viewMatrix = (Camera.Main != null && Camera.Main.Enabled) ? Camera.Main.GetViewMatrix() : Matrix.Identity;
+            Matrix viewMatrix = (Camera.Main && Camera.Main.Enabled) ? Camera.Main.GetViewMatrix() : Matrix.Identity;
             SpriteBatch.Begin(SpriteSortMode.Deferred, null, null, null, null, null, viewMatrix);
         }
 
@@ -245,7 +245,7 @@ namespace MonoEngine
             gunObject.Parent = playerObject;
 
             GameObject cameraObject = new GameObject("Camera");
-            //cameraObject.AddComponent<Camera>();
+            cameraObject.AddComponent<Camera>();
             cameraObject.AddComponent<AudioListener>();
 
             GameObject groundObject = new GameObject("Ground");
