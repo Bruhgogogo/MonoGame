@@ -261,7 +261,7 @@ namespace MonoEngine
             RectangleRenderer rectangleRenderer = groundObject.AddComponent<RectangleRenderer>();
             rectangleRenderer.Origin = new Vector2(0.5f, 0.5f);
 
-            groundObject.AddComponent<BoxCollider>();
+            groundObject.AddComponent<ColliderBox>();
         }
     }
 }

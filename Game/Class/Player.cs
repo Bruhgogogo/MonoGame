@@ -30,7 +30,7 @@ namespace MyMonoGame.Class
         public float JumpForce = 600.0f;
 
         public Transform transform;
-        public BoxCollider boxCollider;
+        public ColliderBox colliderBox;
 
         public Vector2 Velocity = Vector2.Zero;
 
@@ -59,10 +59,10 @@ namespace MyMonoGame.Class
         {
             transform = GetOrAddComponent<Transform>();
             rendererSprite = GetOrAddComponent<SpriteRenderer>();
-            boxCollider = GetOrAddComponent<BoxCollider>();
+            colliderBox = GetOrAddComponent<ColliderBox>();
             audioSource = GetOrAddComponent<AudioSource>();
 
-            boxCollider.IsStatic = false;
+            colliderBox.IsStatic = false;
             audioSource.Is3D = true;
         }
 
@@ -78,14 +78,11 @@ namespace MyMonoGame.Class
 
             transform.Scale = new Vector2(100.0f, 124f);
 
+            colliderBox.ScaleOffset = new Vector2(0.8f, 0.8f);
+
             audioSource.Clip = bgm;
             audioSource.Loop = true;
             audioSource.Play();
-        }
-
-        public Vector2 GetFoward()
-        {
-            return isFacingRight ? transform.Forward : -transform.Forward;
         }
 
         private bool IsMouseOnTheRight(float x)
@@ -205,7 +202,7 @@ namespace MyMonoGame.Class
         {
             ApplyVelocity(deltaTime);
 
-            IEnumerable<CollisionQueryResult> collisionResult = PhysicalEngine.QueryCollision(boxCollider.CollisionActor);
+            IEnumerable<CollisionQueryResult> collisionResult = PhysicalEngine.QueryCollision(colliderBox.CollisionActor);
             ResolveCollision(collisionResult);
             ClipVelocity(collisionResult);
         }
