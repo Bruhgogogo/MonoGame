@@ -2,13 +2,14 @@
 using Microsoft.Xna.Framework.Audio;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
+
 using MonoEngine;
 using MonoEngine.Class;
 using MonoEngine.MonoUtils;
-using MonoGame.Extended;
+
 using System;
-using System.Diagnostics;
-using System.Linq;
+using System.Collections.Generic;
+
 using Engine = MonoEngine.MonoEngine;
 
 namespace MyMonoGame.Class
@@ -35,6 +36,16 @@ namespace MyMonoGame.Class
 
         private bool isFacingRight = false;
         public bool IsFacingRight { get => isFacingRight; }
+
+        private float maxSlopeAngle = 0.5f;
+        public float MaxSlopeAngle
+        {
+            get => maxSlopeAngle;
+            set
+            {
+                maxSlopeAngle = MathF.Cos(value);
+            }
+        }
 
         private bool isGrounded = false;
 
@@ -150,7 +161,8 @@ namespace MyMonoGame.Class
 
         private void ApplyGravity(float deltaTime)
         {
-            Velocity.Y -= Gravity * deltaTime;
+            if (!isGrounded)
+                Velocity.Y -= Gravity * deltaTime;
         }
 
         private void ApplyVelocity(float deltaTime)
@@ -159,12 +171,43 @@ namespace MyMonoGame.Class
             transform.Translate(Velocity * deltaTime);
         }
 
-        private void ClipVelocity()
+        private void ResolveCollision(IEnumerable<CollisionQueryResult> results)
         {
-            foreach (CollisionQueryResult result in PhysicalEngine.QueryCollision(boxCollider.CollisionActor))
+            isGrounded = false;
+
+            foreach (var result in results)
             {
                 transform.Position += result.MinimumTranslationVector;
+
+                if (Vector2.Dot(result.Normal, Vector2Ex.Up) > 0.5f)
+                    isGrounded = true;
             }
+        }
+
+        private void ClipVelocity(IEnumerable<CollisionQueryResult> results)
+        {
+            Vector2 velocity = Velocity;
+
+            for (int i = 0; i < 4; i++)
+            {
+                foreach (var result in results)
+                {
+                    float vn = Vector2.Dot(velocity, result.Normal);
+                    if (vn < -1e-3f)
+                        velocity -= result.Normal * vn;
+                }
+            }
+
+            Velocity = velocity;
+        }
+
+        private void MoveAndSlide(float deltaTime)
+        {
+            ApplyVelocity(deltaTime);
+
+            IEnumerable<CollisionQueryResult> collisionResult = PhysicalEngine.QueryCollision(boxCollider.CollisionActor);
+            ResolveCollision(collisionResult);
+            ClipVelocity(collisionResult);
         }
 
         public override void Update(GameTime gameTime)
@@ -186,8 +229,7 @@ namespace MyMonoGame.Class
             float deltaTime = MathF.Min((float)gameTime.ElapsedGameTime.TotalSeconds, 0.1f);
 
             ApplyGravity(deltaTime);
-            ApplyVelocity(deltaTime);
-            ClipVelocity();
+            MoveAndSlide(deltaTime);
         }
     }
 }
