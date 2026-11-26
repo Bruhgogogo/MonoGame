@@ -68,10 +68,10 @@ namespace MonoEngine
 
     public struct CollisionQueryResult
     {
-        GameObject GameObject;
-        Vector2 Normal;
-        Vector2 MinimumTranslationVector;
-        float PenetrationDepth;
+        public GameObject GameObject;
+        public Vector2 Normal;
+        public Vector2 MinimumTranslationVector;
+        public float PenetrationDepth;
 
         public CollisionQueryResult(GameObject gameObject, Vector2 normal, Vector2 minimumTranslationVector, float penetrationDepth)
         {
@@ -121,6 +121,9 @@ namespace MonoEngine
                 {
                     MonoCollisionActor monoCollisionActor = (MonoCollisionActor)colliderActor;
 
+                    bool isSelf = monoCollisionActor == targetMonoCollisionActor;
+                    if (isSelf) continue;
+
                     bool shouldSkip = collisionQueryParams.FilterType switch
                     {
                         PhysicsFilter.Include => !collisionQueryParams.FilterColliders.Contains(monoCollisionActor),
@@ -130,7 +133,7 @@ namespace MonoEngine
                     if (shouldSkip) continue;
 
                     CollisionShape2D shape2D = monoCollisionActor.shape;
-                    if (!shape2D.TryGetCollision(shape2D, out CollisionResult2D result)) continue;
+                    if (!targetMonoCollisionActor.shape.TryGetCollision(shape2D, out CollisionResult2D result)) continue;
 
                     CollisionQueryResult collisionQueryResult = new CollisionQueryResult(monoCollisionActor.GO, result.Normal, result.MinimumTranslationVector, result.PenetrationDepth);
                     collisionQueryResults.Add(collisionQueryResult);

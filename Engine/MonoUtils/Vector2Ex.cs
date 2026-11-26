@@ -7,6 +7,9 @@ namespace MonoEngine.MonoUtils
 {
     public static class Vector2Ex
     {
+        public static readonly Vector2 Up = new Vector2(0.0f, 1.0f);
+        public static readonly Vector2 Foward = new Vector2(1.0f, 0.0f);
+
         public static Vector2 ApplyDeadZone(Vector2 input, float deadZone)
         {
             return new Vector2(

@@ -1,16 +1,15 @@
 ﻿using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Audio;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
-using Microsoft.Xna.Framework.Audio;
 using MonoEngine;
-
-using MonoEngine.MonoUtils;
 using MonoEngine.Class;
-using Engine = MonoEngine.MonoEngine;
-
+using MonoEngine.MonoUtils;
+using MonoGame.Extended;
 using System;
 using System.Diagnostics;
-using MonoGame.Extended;
+using System.Linq;
+using Engine = MonoEngine.MonoEngine;
 
 namespace MyMonoGame.Class
 {
@@ -140,25 +139,18 @@ namespace MyMonoGame.Class
             rendererSprite.FlipX = isFacingRight;
         }
 
-        private void ApplyGravity(float deltaTime)
+        private void CameraFollow(float deltaTime)
         {
-            if (!isGrounded)
-            {
-                Velocity.Y -= Gravity * deltaTime;
-            }
-            else
-            {
-                Velocity.Y = MathF.Max(Velocity.Y, 0.0f);
-            }
+            Camera camera = Camera.Main;
+            if (!camera)
+                return;
+
+            camera.transform.Position = Vector2Ex.SmoothDamp(camera.transform.Position, transform.Position, ref cameraVelocity, 0.1f, deltaTime);
         }
 
-        private void ProcessGround(float deltaTime)
+        private void ApplyGravity(float deltaTime)
         {
-            Vector2 origin = transform.Position - new Vector2(0.0f, transform.Scale.Y * rendererSprite.Origin.Y);
-            Vector2 direction = new Vector2(0.0f, -1.0f);
-
-            RaycastResult result = PhysicalEngine.Raycast(origin, direction, boxCollider.CollisionActor);
-            isGrounded = result.Hit;
+            Velocity.Y -= Gravity * deltaTime;
         }
 
         private void ApplyVelocity(float deltaTime)
@@ -167,13 +159,12 @@ namespace MyMonoGame.Class
             transform.Translate(Velocity * deltaTime);
         }
 
-        private void CameraFollow(float deltaTime)
+        private void ClipVelocity()
         {
-            Camera camera = Camera.Main;
-            if (!camera)
-                return;
-
-            camera.transform.Position = Vector2Ex.SmoothDamp(camera.transform.Position, transform.Position, ref cameraVelocity, 0.1f, deltaTime);
+            foreach (CollisionQueryResult result in PhysicalEngine.QueryCollision(boxCollider.CollisionActor))
+            {
+                transform.Position += result.MinimumTranslationVector;
+            }
         }
 
         public override void Update(GameTime gameTime)
@@ -196,7 +187,7 @@ namespace MyMonoGame.Class
 
             ApplyGravity(deltaTime);
             ApplyVelocity(deltaTime);
-            ProcessGround(deltaTime);
+            ClipVelocity();
         }
     }
 }
