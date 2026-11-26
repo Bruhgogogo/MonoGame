@@ -35,6 +35,12 @@ namespace MonoEngine.MonoUtils
             Vector2 change = current - target;
             Vector2 originalTo = target;
 
+            if (change.LengthSquared() < 1e-5f)
+            {
+                currentVelocity = Vector2.Zero;
+                return target;
+            }
+
             float maxChange = maxSpeed * smoothTime;
             float changeLength = change.Length();
             if (changeLength > maxChange)
@@ -50,7 +56,13 @@ namespace MonoEngine.MonoUtils
             if (Vector2.Dot(originalTo - current, output - originalTo) > 0f)
             {
                 output = originalTo;
-                currentVelocity = (output - originalTo) / deltaTime;
+                currentVelocity = Vector2.Zero;
+            }
+
+            if (Approximately(output, originalTo, 1e-5f))
+            {
+                output = originalTo;
+                currentVelocity = Vector2.Zero;
             }
 
             return output;
@@ -133,16 +145,6 @@ namespace MonoEngine.MonoUtils
             return dir;
         }
 
-        public static float Distance(Vector2 a, Vector2 b)
-        {
-            return Vector2.Distance(a, b);
-        }
-
-        public static float SqrDistance(Vector2 a, Vector2 b)
-        {
-            return Vector2.DistanceSquared(a, b);
-        }
-
         public static Vector2 ClampMagnitude(Vector2 vector, float maxLength)
         {
             float sqrMag = vector.LengthSquared();
@@ -182,7 +184,7 @@ namespace MonoEngine.MonoUtils
             return (a + b) * 0.5f;
         }
 
-        public static bool Approximately(Vector2 a, Vector2 b, float tolerance = 0.001f)
+        public static bool Approximately(Vector2 a, Vector2 b, float tolerance = 1e-5f)
         {
             return Vector2.DistanceSquared(a, b) <= tolerance * tolerance;
         }

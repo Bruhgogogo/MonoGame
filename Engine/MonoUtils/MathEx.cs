@@ -36,6 +36,11 @@ namespace MonoEngine.MonoUtils
             float x = omega * deltaTime;
             float exp = 1f / (1f + x + 0.48f * x * x + 0.235f * x * x * x);
             float change = current - target;
+            if (MathF.Abs(change) < 1e-5f)
+            {
+                velocity = 0f;
+                return target;
+            }
             float maxChange = maxSpeed * smoothTime;
             change = Clamp(change, -maxChange, maxChange);
             float tempTarget = current - change;
@@ -45,7 +50,12 @@ namespace MonoEngine.MonoUtils
             if (target - current > 0f == output > target)
             {
                 output = target;
-                velocity = (output - target) / deltaTime;
+                velocity = 0f;
+            }
+            if (Approximately(output, target, 1e-5f))
+            {
+                output = target;
+                velocity = 0f;
             }
             return output;
         }
@@ -53,6 +63,11 @@ namespace MonoEngine.MonoUtils
         public static float SmoothDamp(float current, float target, ref float velocity, float smoothTime, float deltaTime)
         {
             return SmoothDamp(current, target, ref velocity, smoothTime, float.PositiveInfinity, deltaTime);
+        }
+
+        public static bool Approximately(float a, float b, float tolerance = 1e-5f)
+        {
+            return Math.Abs(a - b) < tolerance;
         }
 
         public static float Lerp(float a, float b, float t)
@@ -239,6 +254,11 @@ namespace MonoEngine.MonoUtils
             double x = omega * deltaTime;
             double exp = 1.0 / (1.0 + x + 0.48 * x * x + 0.235 * x * x * x);
             double change = current - target;
+            if (Math.Abs(change) < 1e-5d)
+            {
+                velocity = 0.0;
+                return target;
+            }
             double maxChange = maxSpeed * smoothTime;
             change = Clamp(change, -maxChange, maxChange);
             double tempTarget = current - change;
@@ -248,7 +268,12 @@ namespace MonoEngine.MonoUtils
             if (target - current > 0.0 == output > target)
             {
                 output = target;
-                velocity = (output - target) / deltaTime;
+                velocity = 0.0;
+            }
+            if (Approximately(output, target, 1e-5d))
+            {
+                output = target;
+                velocity = 0.0;
             }
             return output;
         }
@@ -256,6 +281,11 @@ namespace MonoEngine.MonoUtils
         public static double SmoothDamp(double current, double target, ref double velocity, double smoothTime, double deltaTime)
         {
             return SmoothDamp(current, target, ref velocity, smoothTime, double.PositiveInfinity, deltaTime);
+        }
+
+        public static bool Approximately(double a, double b, double tolerance = 1e-5d)
+        {
+            return Math.Abs(a - b) < tolerance;
         }
 
         public static double Lerp(double a, double b, double t)
