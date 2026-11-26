@@ -81,7 +81,6 @@ namespace MonoEngine
 
         static public RaycastResult Raycast(Vector2 origin, Vector2 direction, RaycastParams raycastParams)
         {
-            LineSegment2D lineSegment = new LineSegment2D(origin, origin + direction);
             RaycastResult raycastResult = new RaycastResult();
             raycastResult.Hit = false;
             raycastResult.GameObject = null;
@@ -90,6 +89,10 @@ namespace MonoEngine
             raycastResult.Direction = Vector2.Zero;
             raycastResult.Distance = 0.0f;
             raycastResult.Fraction = 0.0f;
+
+            if (direction == Vector2.Zero) return raycastResult;
+
+            LineSegment2D lineSegment = new LineSegment2D(origin, origin + direction);
 
             GameObject bestGameObject = null;
             MonoCollisionActor bestMonoCollision = null;
