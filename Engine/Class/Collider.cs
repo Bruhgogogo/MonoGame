@@ -217,4 +217,13 @@ namespace MonoEngine.Class
             return new CollisionShape2D(OBB);
         }
     }
+
+    public class ColliderSphere : Collider
+    {
+        protected override CollisionShape2D BuildCollisionShape()
+        {
+            BoundingCircle2D circle2D = new BoundingCircle2D(transform.Position, MathF.Max(transform.Scale.X, transform.Scale.Y));
+            return new CollisionShape2D(circle2D);
+        }
+    }
 }

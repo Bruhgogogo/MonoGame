@@ -168,7 +168,7 @@ namespace MyMonoGame.Class
             transform.Translate(Velocity * deltaTime);
         }
 
-        private void ResolveCollision(IEnumerable<CollisionQueryResult> results)
+        private void ResolveCollision(List<OverlapResult> results)
         {
             isGrounded = false;
 
@@ -181,7 +181,7 @@ namespace MyMonoGame.Class
             }
         }
 
-        private void ClipVelocity(IEnumerable<CollisionQueryResult> results)
+        private void ClipVelocity(List<OverlapResult> results, float overbounce = 1.0f)
         {
             Vector2 velocity = Velocity;
 
@@ -189,9 +189,15 @@ namespace MyMonoGame.Class
             {
                 foreach (var result in results)
                 {
-                    float vn = Vector2.Dot(velocity, result.Normal);
-                    if (vn < -1e-3f)
-                        velocity -= result.Normal * vn;
+                    float normalVelocity = Vector2.Dot(velocity, result.Normal);
+                    if (normalVelocity >= 0f) continue;
+                    velocity -= result.Normal * (normalVelocity * overbounce);
+
+                    float adjust = Vector2.Dot(velocity, result.Normal);
+                    if (adjust < 0f)
+                        velocity -= result.Normal * adjust;
+
+                    Vector2Ex.ApplyDeadZoneRef(ref velocity, 1.0f);
                 }
             }
 
@@ -202,7 +208,7 @@ namespace MyMonoGame.Class
         {
             ApplyVelocity(deltaTime);
 
-            IEnumerable<CollisionQueryResult> collisionResult = PhysicalEngine.QueryCollision(colliderBox.CollisionActor);
+            List<OverlapResult> collisionResult = PhysicalEngine.OverlapCollider(colliderBox.CollisionActor);
             ResolveCollision(collisionResult);
             ClipVelocity(collisionResult);
         }

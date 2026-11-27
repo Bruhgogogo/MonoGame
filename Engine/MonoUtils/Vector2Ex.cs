@@ -1,6 +1,5 @@
 ﻿using Microsoft.Xna.Framework;
 using MonoEngine.Class;
-using MonoGame.Extended;
 using System;
 
 namespace MonoEngine.MonoUtils
@@ -16,6 +15,12 @@ namespace MonoEngine.MonoUtils
                 MathF.Abs(input.X) <= deadZone ? 0f : input.X,
                 MathF.Abs(input.Y) <= deadZone ? 0f : input.Y
             );
+        }
+
+        public static void ApplyDeadZoneRef(ref Vector2 input, float deadZone)
+        {
+            input.X = MathF.Abs(input.X) <= deadZone ? 0f : input.X;
+            input.Y = MathF.Abs(input.Y) <= deadZone ? 0f : input.Y;
         }
 
         public static Vector2 MoveToward(Vector2 current, Vector2 target, float maxDistanceDelta)

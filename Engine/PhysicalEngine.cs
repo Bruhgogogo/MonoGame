@@ -52,13 +52,13 @@ namespace MonoEngine
         }
     }
 
-    public struct CollisionQueryParams
+    public struct OverlapParams
     {
         public HashSet<MonoCollisionActor> FilterColliders;
         public PhysicsFilter FilterType;
         public PhysicsBroadphaseFilter BroadPhaseFilterType;
 
-        public CollisionQueryParams(HashSet<MonoCollisionActor> filterColliders, PhysicsFilter filterType, PhysicsBroadphaseFilter broadPhaseFilterType)
+        public OverlapParams(HashSet<MonoCollisionActor> filterColliders, PhysicsFilter filterType, PhysicsBroadphaseFilter broadPhaseFilterType)
         {
             FilterColliders = filterColliders;
             FilterType = filterType;
@@ -66,14 +66,14 @@ namespace MonoEngine
         }
     }
 
-    public struct CollisionQueryResult
+    public struct OverlapResult
     {
         public GameObject GameObject;
         public Vector2 Normal;
         public Vector2 MinimumTranslationVector;
         public float PenetrationDepth;
 
-        public CollisionQueryResult(GameObject gameObject, Vector2 normal, Vector2 minimumTranslationVector, float penetrationDepth)
+        public OverlapResult(GameObject gameObject, Vector2 normal, Vector2 minimumTranslationVector, float penetrationDepth)
         {
             GameObject = gameObject;
             Normal = normal;
@@ -111,9 +111,9 @@ namespace MonoEngine
             CollisionWorld.EnableCollisionBetweenLayers(MOVEABLE_LAYER_NAME, MOVEABLE_LAYER_NAME);
         }
 
-        static public IEnumerable<CollisionQueryResult> QueryCollision(MonoCollisionActor targetMonoCollisionActor, CollisionQueryParams collisionQueryParams)
+        static public List<OverlapResult> OverlapCollider(MonoCollisionActor targetMonoCollisionActor, OverlapParams overlapParams)
         {
-            List<CollisionQueryResult> collisionQueryResults = new List<CollisionQueryResult>();
+            List<OverlapResult> collisionQueryResults = new List<OverlapResult>();
 
             void Query(Layer layer)
             {
@@ -124,10 +124,10 @@ namespace MonoEngine
                     bool isSelf = monoCollisionActor == targetMonoCollisionActor;
                     if (isSelf) continue;
 
-                    bool shouldSkip = collisionQueryParams.FilterType switch
+                    bool shouldSkip = overlapParams.FilterType switch
                     {
-                        PhysicsFilter.Include => !collisionQueryParams.FilterColliders.Contains(monoCollisionActor),
-                        PhysicsFilter.Exclude => collisionQueryParams.FilterColliders.Contains(monoCollisionActor),
+                        PhysicsFilter.Include => !overlapParams.FilterColliders.Contains(monoCollisionActor),
+                        PhysicsFilter.Exclude => overlapParams.FilterColliders.Contains(monoCollisionActor),
                         _ => false
                     };
                     if (shouldSkip) continue;
@@ -135,28 +135,65 @@ namespace MonoEngine
                     CollisionShape2D shape2D = monoCollisionActor.shape;
                     if (!targetMonoCollisionActor.shape.TryGetCollision(shape2D, out CollisionResult2D result)) continue;
 
-                    CollisionQueryResult collisionQueryResult = new CollisionQueryResult(monoCollisionActor.GO, result.Normal, result.MinimumTranslationVector, result.PenetrationDepth);
+                    OverlapResult collisionQueryResult = new OverlapResult(monoCollisionActor.GO, result.Normal, result.MinimumTranslationVector, result.PenetrationDepth);
                     collisionQueryResults.Add(collisionQueryResult);
                 }
             }
 
-            if (collisionQueryParams.BroadPhaseFilterType == PhysicsBroadphaseFilter.Static || collisionQueryParams.BroadPhaseFilterType == PhysicsBroadphaseFilter.All)
+            if (overlapParams.BroadPhaseFilterType == PhysicsBroadphaseFilter.Static || overlapParams.BroadPhaseFilterType == PhysicsBroadphaseFilter.All)
             {
                 Query(staticLayer);
             }
 
-            if (collisionQueryParams.BroadPhaseFilterType == PhysicsBroadphaseFilter.Moveable || collisionQueryParams.BroadPhaseFilterType == PhysicsBroadphaseFilter.All)
+            if (overlapParams.BroadPhaseFilterType == PhysicsBroadphaseFilter.Moveable || overlapParams.BroadPhaseFilterType == PhysicsBroadphaseFilter.All)
             {
                 Query(moveableLayer);
             }
 
-            return collisionQueryResults.AsEnumerable();
+            return collisionQueryResults;
         }
 
-        static public IEnumerable<CollisionQueryResult> QueryCollision(MonoCollisionActor targetMonoCollisionActor)
+        static public List<OverlapResult> OverlapCollider(MonoCollisionActor targetMonoCollisionActor)
         {
-            CollisionQueryParams collisionQueryParams = new CollisionQueryParams(new HashSet<MonoCollisionActor>(), PhysicsFilter.Exclude, PhysicsBroadphaseFilter.All);
-            return QueryCollision(targetMonoCollisionActor, collisionQueryParams);
+            OverlapParams overlapParams = new OverlapParams(new HashSet<MonoCollisionActor>(), PhysicsFilter.Exclude, PhysicsBroadphaseFilter.All);
+            return OverlapCollider(targetMonoCollisionActor, overlapParams);
+        }
+
+        static public List<OverlapResult> OverlapBox(Vector2 center, Vector2 size, float rotation, OverlapParams overlapParams)
+        {
+            float c = MathF.Cos(rotation);
+            float s = MathF.Sin(rotation);
+
+            Vector2 axisX = new Vector2(c, s);
+            Vector2 axisY = new Vector2(-s, c);
+            Vector2 halfExtent = size * 0.5f;
+
+            OrientedBoundingBox2D OBB = new OrientedBoundingBox2D(center, axisX, axisY, halfExtent);
+            CollisionShape2D collisionShape = new CollisionShape2D(OBB);
+
+            MonoCollisionActor monoCollisionActor = new MonoCollisionActor(collisionShape, null);
+            return OverlapCollider(monoCollisionActor, overlapParams);
+        }
+
+        static public List<OverlapResult> OverlapBox(Vector2 center, Vector2 size, float rotation)
+        {
+            OverlapParams overlapParams = new OverlapParams(new HashSet<MonoCollisionActor>(), PhysicsFilter.Exclude, PhysicsBroadphaseFilter.All);
+            return OverlapBox(center, size, rotation);
+        }
+
+        static public List<OverlapResult> OverlapSphere(Vector2 center, float radius, OverlapParams overlapParams)
+        {
+            BoundingCircle2D circle2D = new BoundingCircle2D(center, radius);
+            CollisionShape2D collisionShape = new CollisionShape2D(circle2D);
+
+            MonoCollisionActor monoCollisionActor = new MonoCollisionActor(collisionShape, null);
+            return OverlapCollider(monoCollisionActor, overlapParams);
+        }
+
+        static public List<OverlapResult> OverlapSphere(Vector2 center, float radius)
+        {
+            OverlapParams overlapParams = new OverlapParams(new HashSet<MonoCollisionActor>(), PhysicsFilter.Exclude, PhysicsBroadphaseFilter.All);
+            return OverlapSphere(center, radius, overlapParams);
         }
 
         static public RaycastResult Raycast(Vector2 origin, Vector2 direction, RaycastParams raycastParams)
