@@ -196,8 +196,8 @@ namespace MonoEngine.Class
             if (distance > 0.001f)
             {
                 Vector2 radialDir = relativePos / distance;
-                Vector2 normalizedAudioVelocity = Velocity * MonoEngine.PIXEL_TO_METER;
-                Vector2 normalizedListenerVelocity = mainListener.Velocity * MonoEngine.PIXEL_TO_METER;
+                Vector2 normalizedAudioVelocity = Velocity;
+                Vector2 normalizedListenerVelocity = mainListener.Velocity;
 
                 float sourceRadialVel = Vector2.Dot(normalizedAudioVelocity, radialDir);
                 float listenerRadialVel = Vector2.Dot(normalizedListenerVelocity, radialDir);

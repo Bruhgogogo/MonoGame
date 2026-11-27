@@ -9,14 +9,14 @@ using MonoEngine.MonoUtils;
 
 using System;
 using System.Collections.Generic;
-
+using System.Diagnostics;
 using Engine = MonoEngine.MonoEngine;
 
 namespace MyMonoGame.Class
 {
     public class PlayerScript : Behaviour
     {
-        public float Speed = 5.0f * Engine.METER_TO_PIXEL;
+        public float Speed = 5.0f;
 
         public float MoveBackwardPenaltyFactor = 0.5f;
 
@@ -26,8 +26,8 @@ namespace MyMonoGame.Class
         public float GroundFric = 10.0f;
         public float AirFric = 0.25f;
 
-        public float Gravity = 9.8f * Engine.METER_TO_PIXEL;
-        public float JumpForce = 4.5f * Engine.METER_TO_PIXEL;
+        public float Gravity = 9.8f;
+        public float JumpForce = 4.5f;
 
         public Transform transform;
         public ColliderBox colliderBox;
@@ -79,7 +79,7 @@ namespace MyMonoGame.Class
             rendererSprite.Texture = playerTexture;
             rendererSprite.Origin = new Vector2(0.5f, 0.5f);
 
-            transform.Scale = new Vector2(100.0f, 124f);
+            transform.Scale = new Vector2(0.78f, 0.97f);
 
             colliderBox.ScaleOffset = new Vector2(0.85f, 0.85f);
 
@@ -167,7 +167,6 @@ namespace MyMonoGame.Class
 
         private void ApplyVelocity(float deltaTime)
         {
-            Velocity = Vector2Ex.ApplyDeadZone(Velocity, 1.0f);
             transform.Translate(Velocity * deltaTime);
         }
 
@@ -199,11 +198,10 @@ namespace MyMonoGame.Class
                     float adjust = Vector2.Dot(velocity, result.Normal);
                     if (adjust < 0f)
                         velocity -= result.Normal * adjust;
-
-                    Vector2Ex.ApplyDeadZoneRef(ref velocity, 1.0f);
                 }
             }
 
+            Vector2Ex.ApplyDeadZoneRef(ref velocity, 1e-3f);
             Velocity = velocity;
         }
 

@@ -27,7 +27,7 @@ namespace MonoEngine.Class
             return
                 Matrix.CreateTranslation(-transform.Position.X, transform.Position.Y, 0.0f)
                 * Matrix.CreateRotationZ(transform.Rotation)
-                * Matrix.CreateScale(transform.Scale.X, transform.Scale.Y, 1.0f)
+                * Matrix.CreateScale(transform.Scale.X * MonoEngine.METER_TO_PIXEL, transform.Scale.Y * MonoEngine.METER_TO_PIXEL, 1.0f)
                 * Matrix.CreateTranslation(new Vector3(MonoEngine.ViewportSize * 0.5f, 0.0f));
         }
 
