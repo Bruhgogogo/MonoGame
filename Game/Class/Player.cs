@@ -37,10 +37,13 @@ namespace MyMonoGame.Class
         private bool isFacingRight = false;
         public bool IsFacingRight { get => isFacingRight; }
 
-        private float maxSlopeAngle = 0.5f;
+        private float maxSlopeAngle = 0.7f;
         public float MaxSlopeAngle
         {
-            get => maxSlopeAngle;
+            get
+            {
+                return MathF.Acos(maxSlopeAngle);
+            }
             set
             {
                 maxSlopeAngle = MathF.Cos(value);
@@ -176,7 +179,7 @@ namespace MyMonoGame.Class
             {
                 transform.Position += result.MinimumTranslationVector;
 
-                if (Vector2.Dot(result.Normal, Vector2Ex.Up) > 0.5f)
+                if (Vector2.Dot(result.Normal, Vector2Ex.Up) > maxSlopeAngle)
                     isGrounded = true;
             }
         }
