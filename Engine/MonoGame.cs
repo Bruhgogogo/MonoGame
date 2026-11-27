@@ -256,7 +256,6 @@ namespace MonoEngine
             Transform groundTransform = groundObject.AddComponent<Transform>();
             groundTransform.Position = new Vector2(640.0f, -720.0f);
             groundTransform.Scale = new Vector2(1280.0f, 50.0f);
-            groundTransform.Rotation = 15.0f * MathFEx.Deg2Rad;
 
             RectangleRenderer rectangleRenderer = groundObject.AddComponent<RectangleRenderer>();
             rectangleRenderer.Origin = new Vector2(0.5f, 0.5f);
