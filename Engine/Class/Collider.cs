@@ -26,6 +26,44 @@ namespace MonoEngine.Class
 
     public class Collider : Behaviour
     {
+        public Transform transform;
+
+        private Vector2 positionOffset = Vector2.Zero;
+        public Vector2 PositionOffset
+        {
+            get => positionOffset;
+            set
+            {
+                if (positionOffset == value) return;
+                positionOffset = value;
+                offsetDirty = true;
+            }
+        }
+
+        private float rotationOffset = 0.0f;
+        public float RotationOffset
+        {
+            get => rotationOffset;
+            set
+            {
+                if (rotationOffset == value) return;
+                rotationOffset = value;
+                offsetDirty = true;
+            }
+        }
+
+        private Vector2 scaleOffset = Vector2.One;
+        public Vector2 ScaleOffset
+        {
+            get => scaleOffset;
+            set
+            {
+                if (scaleOffset == value) return;
+                scaleOffset = value;
+                offsetDirty = true;
+            }
+        }
+
         private bool isStatic = true;
         public bool IsStatic 
         { 
@@ -39,8 +77,6 @@ namespace MonoEngine.Class
                 isStatic = value;
             }
         }
-
-        public Transform transform;
 
         public CollisionShape2D Shape
         {
@@ -63,14 +99,14 @@ namespace MonoEngine.Class
         protected Vector2 lastScale;
         protected float lastRotation;
 
+        private bool offsetDirty = false;
+
         public override void Awake()
         {
             transform = GetOrAddComponent<Transform>();
             RecordLastTransform();
 
             collisionActor = new MonoCollisionActor(BuildCollisionShape(), GO);
-
-            PhysicalEngine.MonoColliders.Add(this);
         }
 
         public override void Start()
@@ -84,6 +120,12 @@ namespace MonoEngine.Class
             if (IsTransformChanged())
             {
                 RecordLastTransform();
+                collisionActor.shape = BuildCollisionShape();
+            }
+
+            if (offsetDirty)
+            {
+                offsetDirty = false;
                 collisionActor.shape = BuildCollisionShape();
             }
         }
@@ -159,20 +201,29 @@ namespace MonoEngine.Class
         protected virtual CollisionShape2D BuildCollisionShape() { throw new NotSupportedException("MonoEngine: Attempt to call BuildCollisionShape on base Collider"); }
     }
 
-    public class BoxCollider : Collider
+    public class ColliderBox : Collider
     {
         protected override CollisionShape2D BuildCollisionShape()
         {
-            float c = MathF.Cos(transform.Rotation);
-            float s = MathF.Sin(transform.Rotation);
+            float c = MathF.Cos(transform.Rotation + RotationOffset);
+            float s = MathF.Sin(transform.Rotation + RotationOffset);
 
-            Vector2 center = transform.Position;
+            Vector2 center = transform.Position + PositionOffset;
             Vector2 axisX = new Vector2(c, s);
             Vector2 axisY = new Vector2(-s, c);
-            Vector2 halfExtent = transform.Scale * 0.5f;
+            Vector2 halfExtent = transform.Scale * ScaleOffset * 0.5f;
 
             OrientedBoundingBox2D OBB = new OrientedBoundingBox2D(center, axisX, axisY, halfExtent);
             return new CollisionShape2D(OBB);
+        }
+    }
+
+    public class ColliderSphere : Collider
+    {
+        protected override CollisionShape2D BuildCollisionShape()
+        {
+            BoundingCircle2D circle2D = new BoundingCircle2D(transform.Position, MathF.Max(transform.Scale.X, transform.Scale.Y));
+            return new CollisionShape2D(circle2D);
         }
     }
 }

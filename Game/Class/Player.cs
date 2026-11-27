@@ -1,16 +1,16 @@
 ﻿using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Audio;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
-using Microsoft.Xna.Framework.Audio;
-using MonoEngine;
 
-using MonoEngine.MonoUtils;
+using MonoEngine;
 using MonoEngine.Class;
-using Engine = MonoEngine.MonoEngine;
+using MonoEngine.MonoUtils;
 
 using System;
-using System.Diagnostics;
-using MonoGame.Extended;
+using System.Collections.Generic;
+
+using Engine = MonoEngine.MonoEngine;
 
 namespace MyMonoGame.Class
 {
@@ -30,12 +30,22 @@ namespace MyMonoGame.Class
         public float JumpForce = 600.0f;
 
         public Transform transform;
-        public BoxCollider boxCollider;
+        public ColliderBox colliderBox;
 
         public Vector2 Velocity = Vector2.Zero;
 
         private bool isFacingRight = false;
         public bool IsFacingRight { get => isFacingRight; }
+
+        private float maxSlopeAngle = 0.5f;
+        public float MaxSlopeAngle
+        {
+            get => maxSlopeAngle;
+            set
+            {
+                maxSlopeAngle = MathF.Cos(value);
+            }
+        }
 
         private bool isGrounded = false;
 
@@ -49,10 +59,10 @@ namespace MyMonoGame.Class
         {
             transform = GetOrAddComponent<Transform>();
             rendererSprite = GetOrAddComponent<SpriteRenderer>();
-            boxCollider = GetOrAddComponent<BoxCollider>();
+            colliderBox = GetOrAddComponent<ColliderBox>();
             audioSource = GetOrAddComponent<AudioSource>();
 
-            boxCollider.IsStatic = false;
+            colliderBox.IsStatic = false;
             audioSource.Is3D = true;
         }
 
@@ -68,14 +78,11 @@ namespace MyMonoGame.Class
 
             transform.Scale = new Vector2(100.0f, 124f);
 
+            colliderBox.ScaleOffset = new Vector2(0.8f, 0.8f);
+
             audioSource.Clip = bgm;
             audioSource.Loop = true;
             audioSource.Play();
-        }
-
-        public Vector2 GetFoward()
-        {
-            return isFacingRight ? transform.Forward : -transform.Forward;
         }
 
         private bool IsMouseOnTheRight(float x)
@@ -140,25 +147,19 @@ namespace MyMonoGame.Class
             rendererSprite.FlipX = isFacingRight;
         }
 
+        private void CameraFollow(float deltaTime)
+        {
+            Camera camera = Camera.Main;
+            if (!camera)
+                return;
+
+            camera.transform.Position = Vector2Ex.SmoothDamp(camera.transform.Position, transform.Position, ref cameraVelocity, 0.1f, deltaTime);
+        }
+
         private void ApplyGravity(float deltaTime)
         {
             if (!isGrounded)
-            {
                 Velocity.Y -= Gravity * deltaTime;
-            }
-            else
-            {
-                Velocity.Y = MathF.Max(Velocity.Y, 0.0f);
-            }
-        }
-
-        private void ProcessGround(float deltaTime)
-        {
-            Vector2 origin = transform.Position - new Vector2(0.0f, transform.Scale.Y * rendererSprite.Origin.Y);
-            Vector2 direction = new Vector2(0.0f, -1.0f);
-
-            RaycastResult result = PhysicalEngine.Raycast(origin, direction, boxCollider.CollisionActor);
-            isGrounded = result.Hit;
         }
 
         private void ApplyVelocity(float deltaTime)
@@ -167,13 +168,49 @@ namespace MyMonoGame.Class
             transform.Translate(Velocity * deltaTime);
         }
 
-        private void CameraFollow(float deltaTime)
+        private void ResolveCollision(List<OverlapResult> results)
         {
-            Camera camera = Camera.Main;
-            if (!camera)
-                return;
+            isGrounded = false;
 
-            camera.transform.Position = Vector2Ex.SmoothDamp(camera.transform.Position, transform.Position, ref cameraVelocity, 0.1f, deltaTime);
+            foreach (var result in results)
+            {
+                transform.Position += result.MinimumTranslationVector;
+
+                if (Vector2.Dot(result.Normal, Vector2Ex.Up) > 0.5f)
+                    isGrounded = true;
+            }
+        }
+
+        private void ClipVelocity(List<OverlapResult> results, float overbounce = 1.0f)
+        {
+            Vector2 velocity = Velocity;
+
+            for (int i = 0; i < 4; i++)
+            {
+                foreach (var result in results)
+                {
+                    float normalVelocity = Vector2.Dot(velocity, result.Normal);
+                    if (normalVelocity >= 0f) continue;
+                    velocity -= result.Normal * (normalVelocity * overbounce);
+
+                    float adjust = Vector2.Dot(velocity, result.Normal);
+                    if (adjust < 0f)
+                        velocity -= result.Normal * adjust;
+
+                    Vector2Ex.ApplyDeadZoneRef(ref velocity, 1.0f);
+                }
+            }
+
+            Velocity = velocity;
+        }
+
+        private void MoveAndSlide(float deltaTime)
+        {
+            ApplyVelocity(deltaTime);
+
+            List<OverlapResult> collisionResult = PhysicalEngine.OverlapCollider(colliderBox.CollisionActor);
+            ResolveCollision(collisionResult);
+            ClipVelocity(collisionResult);
         }
 
         public override void Update(GameTime gameTime)
@@ -195,8 +232,7 @@ namespace MyMonoGame.Class
             float deltaTime = MathF.Min((float)gameTime.ElapsedGameTime.TotalSeconds, 0.1f);
 
             ApplyGravity(deltaTime);
-            ApplyVelocity(deltaTime);
-            ProcessGround(deltaTime);
+            MoveAndSlide(deltaTime);
         }
     }
 }

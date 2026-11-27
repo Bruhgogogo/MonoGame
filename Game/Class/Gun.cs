@@ -1,7 +1,6 @@
 ﻿using MonoEngine;
 using MonoEngine.Class;
 using Microsoft.Xna.Framework;
-using System.Diagnostics;
 
 namespace MyMonoGame.Class
 {
@@ -18,7 +17,7 @@ namespace MyMonoGame.Class
 
         public void Shoot(Vector2 origin, Vector2 direciton)
         {
-            RaycastResult result = PhysicalEngine.Raycast(origin, direciton * 10000.0f, playerScript.boxCollider.CollisionActor);
+            RaycastResult result = PhysicalEngine.Raycast(origin, direciton * 10000.0f, playerScript.colliderBox.CollisionActor);
             if (!result.Hit) return;
         }
     }

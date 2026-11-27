@@ -1,18 +1,26 @@
 ﻿using Microsoft.Xna.Framework;
 using MonoEngine.Class;
-using MonoGame.Extended;
 using System;
 
 namespace MonoEngine.MonoUtils
 {
     public static class Vector2Ex
     {
+        public static readonly Vector2 Up = new Vector2(0.0f, 1.0f);
+        public static readonly Vector2 Foward = new Vector2(1.0f, 0.0f);
+
         public static Vector2 ApplyDeadZone(Vector2 input, float deadZone)
         {
             return new Vector2(
                 MathF.Abs(input.X) <= deadZone ? 0f : input.X,
                 MathF.Abs(input.Y) <= deadZone ? 0f : input.Y
             );
+        }
+
+        public static void ApplyDeadZoneRef(ref Vector2 input, float deadZone)
+        {
+            input.X = MathF.Abs(input.X) <= deadZone ? 0f : input.X;
+            input.Y = MathF.Abs(input.Y) <= deadZone ? 0f : input.Y;
         }
 
         public static Vector2 MoveToward(Vector2 current, Vector2 target, float maxDistanceDelta)
