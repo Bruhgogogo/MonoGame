@@ -78,8 +78,8 @@ namespace MonoEngine
         static private PhysicalEngine physicalEngine;
         static private GraphicsDeviceManager Graphics;
 
-        public const float METER_TO_PIXEL = 192.0f;
-        public const float PIXEL_TO_METER = 1.0f / 192.0f;
+        public const float METER_TO_PIXEL = 128.0f;
+        public const float PIXEL_TO_METER = 1.0f / METER_TO_PIXEL;
 
         public const int DEFAULT_RENDERER_LIST_SIZE = 1024;
         public const int DEFAULT_BEHAVIOUR_LIST_SIZE = 1024;

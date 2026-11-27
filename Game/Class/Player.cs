@@ -16,7 +16,7 @@ namespace MyMonoGame.Class
 {
     public class PlayerScript : Behaviour
     {
-        public float Speed = 800.0f;
+        public float Speed = 5.0f * Engine.METER_TO_PIXEL;
 
         public float MoveBackwardPenaltyFactor = 0.5f;
 
@@ -26,8 +26,8 @@ namespace MyMonoGame.Class
         public float GroundFric = 10.0f;
         public float AirFric = 0.25f;
 
-        public float Gravity = 1000.0f;
-        public float JumpForce = 600.0f;
+        public float Gravity = 9.8f * Engine.METER_TO_PIXEL;
+        public float JumpForce = 4.5f * Engine.METER_TO_PIXEL;
 
         public Transform transform;
         public ColliderBox colliderBox;
@@ -81,7 +81,7 @@ namespace MyMonoGame.Class
 
             transform.Scale = new Vector2(100.0f, 124f);
 
-            colliderBox.ScaleOffset = new Vector2(0.8f, 0.8f);
+            colliderBox.ScaleOffset = new Vector2(0.85f, 0.85f);
 
             audioSource.Clip = bgm;
             audioSource.Loop = true;
